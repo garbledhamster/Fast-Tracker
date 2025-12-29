@@ -40,13 +40,16 @@
             </svg>
 
             <div class="absolute inset-0 flex flex-col items-center justify-center select-none">
+              <div class="mb-2">
+                <div id="timer-type" class="text-xs text-cyan-100 px-2 py-0.5 rounded-full bg-cyan-600/25 border border-cyan-500/35">No fast selected</div>
+              </div>
+
               <button id="timer-main" class="text-3xl font-semibold tracking-tight px-3 py-2 rounded-2xl active:bg-slate-900/40">00:00:00</button>
               <div id="timer-mode" class="text-[11px] uppercase tracking-[0.2em] text-slate-500 mt-1">Time Fasted</div>
               <div id="timer-sub" class="text-xs text-slate-400 mt-1">Tap time to change view</div>
 
-              <div class="mt-3 flex items-center gap-2">
+              <div class="mt-3">
                 <div id="timer-status" class="text-[11px] uppercase tracking-[0.2em] text-slate-500">IDLE</div>
-                <div id="timer-type" class="text-xs text-cyan-100 px-2 py-0.5 rounded-full bg-cyan-600/25 border border-cyan-500/35">No fast selected</div>
               </div>
             </div>
           </div>
@@ -60,7 +63,7 @@
         <div class="mt-1">
           <h2 class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Fast types</h2>
           <div id="fast-type-chips" class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1"></div>
-          <div class="text-[11px] text-slate-500 mt-2">Changing type while fasting updates the target end time without resetting your start.</div>
+          <div class="text-[11px] text-slate-500 mt-2">Select a type to preview, then tap “Use this fast type” to apply.</div>
         </div>
 
         <div class="mt-3 space-y-2 text-xs text-slate-400">
