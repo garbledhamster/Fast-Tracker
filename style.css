@@ -1,6 +1,4 @@
-body {
-  -webkit-tap-highlight-color: transparent;
-}
+body { -webkit-tap-highlight-color: transparent; }
 
 .switch-btn {
   width: 40px;
@@ -24,21 +22,8 @@ body {
   transition: transform 0.16s linear, background 0.16s linear;
 }
 
-.switch-btn.on {
-  background: #06b6d4;
-  border-color: #06b6d4;
-}
+.switch-btn.on { background: #06b6d4; border-color: #06b6d4; }
+.switch-btn.on::before { transform: translateX(16px); background: #0f172a; }
 
-.switch-btn.on::before {
-  transform: translateX(16px);
-  background: #0f172a;
-}
-
-.nav-btn-active {
-  color: #e5e7eb;
-  border-top: 2px solid #06b6d4;
-}
-
-.nav-btn {
-  border-top: 2px solid transparent;
-}
+.nav-btn-active { border-top: 2px solid #06b6d4; }
+.nav-btn { border-top: 2px solid transparent; }
