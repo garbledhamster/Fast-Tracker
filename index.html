@@ -16,57 +16,58 @@
   </script>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-50">
-  <div id="toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden px-3 py-2 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-100"></div>
+  <div id="toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden px-3 py-2 rounded-full bg-slate-900 border border-slate-700 text-sm md:text-xs text-slate-100"></div>
+  <div id="nav-tooltip" class="fixed z-50 hidden px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-[11px] text-slate-100 pointer-events-none shadow-lg"></div>
 
   <div id="app" class="flex flex-col min-h-screen">
     <header class="px-4 pt-4 pb-3 flex items-center justify-between">
       <div class="flex flex-col">
-        <h1 class="text-lg font-semibold tracking-tight">Fasting Tracker</h1>
-        <p id="header-subtitle" class="text-xs text-slate-400">No active fast</p>
+        <h1 class="text-xl md:text-lg font-semibold tracking-tight">Fasting Tracker</h1>
+        <p id="header-subtitle" class="text-sm md:text-xs text-slate-400">No active fast</p>
       </div>
-      <button id="alerts-btn" class="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-200 flex items-center gap-2">
-        <span id="alerts-dot" class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+      <button id="alerts-btn" class="text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border border-slate-700 text-slate-200 flex items-center gap-2">
+        <span id="alerts-dot" class="w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-slate-600"></span>
         <span id="alerts-label">Enable alerts</span>
       </button>
     </header>
 
-    <main class="flex-1 px-4 pb-20 pt-2">
-      <section id="tab-timer" class="h-full flex flex-col gap-5">
+    <main class="flex-1 px-4 pb-28 md:pb-20 pt-2">
+      <section id="tab-timer" class="h-full flex flex-col gap-6 md:gap-5">
         <div class="flex justify-center mt-2">
-          <div class="relative w-64 h-64">
+          <div class="relative w-80 h-80 md:w-64 md:h-64">
             <svg viewBox="0 0 200 200" class="w-full h-full -rotate-90">
               <circle cx="100" cy="100" r="80" stroke="#1e293b" stroke-width="16" fill="none"></circle>
               <circle id="progress-ring" cx="100" cy="100" r="80" stroke="#06b6d4" stroke-width="16" stroke-linecap="round" fill="none" stroke-dasharray="502.6548245743669" stroke-dashoffset="502.6548245743669"></circle>
             </svg>
 
             <div class="absolute inset-0 flex flex-col items-center justify-center select-none">
-              <div class="mb-2">
-                <div id="timer-type" class="text-xs text-cyan-100 px-2 py-0.5 rounded-full bg-cyan-600/25 border border-cyan-500/35">No fast selected</div>
+              <div class="mb-3">
+                <div id="timer-type" class="text-sm md:text-xs text-cyan-100 px-3 py-1 md:px-2 md:py-0.5 rounded-full bg-cyan-600/25 border border-cyan-500/35">No fast selected</div>
               </div>
 
-              <button id="timer-main" class="text-3xl font-semibold tracking-tight px-3 py-2 rounded-2xl active:bg-slate-900/40">00:00:00</button>
-              <div id="timer-mode" class="text-[11px] uppercase tracking-[0.2em] text-slate-500 mt-1">Time Fasted</div>
-              <div id="timer-sub" class="text-xs text-slate-400 mt-1">Tap time to change view</div>
+              <button id="timer-main" class="text-5xl md:text-3xl font-semibold tracking-tight px-3 py-2 rounded-2xl active:bg-slate-900/40">00:00:00</button>
+              <div id="timer-mode" class="text-xs md:text-[11px] uppercase tracking-[0.2em] text-slate-500 mt-1">Time Fasted</div>
+              <div id="timer-sub" class="text-sm md:text-xs text-slate-400 mt-2 md:mt-1">Tap time to change view</div>
 
-              <div class="mt-3">
-                <div id="timer-status" class="text-[11px] uppercase tracking-[0.2em] text-slate-500">IDLE</div>
+              <div class="mt-4 md:mt-3">
+                <div id="timer-status" class="text-xs md:text-[11px] uppercase tracking-[0.2em] text-slate-500">IDLE</div>
               </div>
             </div>
           </div>
         </div>
 
         <div class="space-y-3">
-          <button id="start-fast-btn" class="w-full py-3 rounded-full bg-brand-500 text-slate-950 font-semibold text-sm">Start Fast</button>
-          <button id="stop-fast-btn" class="w-full py-3 rounded-full bg-slate-800 text-slate-50 font-semibold text-sm hidden">Stop Fast</button>
+          <button id="start-fast-btn" class="w-full py-4 md:py-3 rounded-full bg-brand-500 text-slate-950 font-semibold text-base md:text-sm">Start Fast</button>
+          <button id="stop-fast-btn" class="w-full py-4 md:py-3 rounded-full bg-slate-800 text-slate-50 font-semibold text-base md:text-sm hidden">Stop Fast</button>
         </div>
 
         <div class="mt-1">
           <h2 class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Fast types</h2>
-          <div id="fast-type-chips" class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1"></div>
-          <div class="text-[11px] text-slate-500 mt-2">Select a type to preview, then tap “Use this fast type” to apply.</div>
+          <div id="fast-type-chips" class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1"></div>
+          <div class="text-xs md:text-[11px] text-slate-500 mt-2">Select a type to preview, then tap “Use this fast type” to apply.</div>
         </div>
 
-        <div class="mt-3 space-y-2 text-xs text-slate-400">
+        <div class="mt-3 space-y-2 text-sm md:text-xs text-slate-400">
           <div class="flex justify-between items-center">
             <span>Started</span>
             <button id="meta-start-btn" class="text-slate-200 underline underline-offset-4 decoration-slate-700 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed" disabled>—</button>
@@ -85,25 +86,25 @@
       <section id="tab-history" class="h-full flex-col gap-4 hidden">
         <div class="mb-4">
           <div class="flex items-center justify-between mb-2">
-            <button id="calendar-prev" class="p-2 rounded-full bg-slate-900 border border-slate-700 text-xs">&lt;</button>
-            <div id="calendar-label" class="text-sm font-medium text-slate-100"></div>
-            <button id="calendar-next" class="p-2 rounded-full bg-slate-900 border border-slate-700 text-xs">&gt;</button>
+            <button id="calendar-prev" class="p-3 md:p-2 rounded-full bg-slate-900 border border-slate-700 text-sm md:text-xs">&lt;</button>
+            <div id="calendar-label" class="text-base md:text-sm font-medium text-slate-100"></div>
+            <button id="calendar-next" class="p-3 md:p-2 rounded-full bg-slate-900 border border-slate-700 text-sm md:text-xs">&gt;</button>
           </div>
-          <div class="grid grid-cols-7 gap-1 text-[10px] text-center text-slate-500 mb-1">
+          <div class="grid grid-cols-7 gap-1 text-[11px] md:text-[10px] text-center text-slate-500 mb-1">
             <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
           </div>
-          <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-xs"></div>
+          <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-sm md:text-xs"></div>
         </div>
 
         <div class="mb-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-1">Selected day</h2>
-          <div id="day-summary" class="text-xs text-slate-300 mb-1">No fasts logged</div>
-          <div id="day-fast-list" class="space-y-2 text-xs"></div>
+          <div id="day-summary" class="text-sm md:text-xs text-slate-300 mb-2 md:mb-1">No fasts logged</div>
+          <div id="day-fast-list" class="space-y-2 text-sm md:text-xs"></div>
         </div>
 
         <div class="mt-2">
           <h2 class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-1">Recent fasts</h2>
-          <div id="recent-fast-list" class="space-y-2 text-xs"></div>
+          <div id="recent-fast-list" class="space-y-2 text-sm md:text-xs"></div>
         </div>
       </section>
 
@@ -111,42 +112,64 @@
         <div class="space-y-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-1">Defaults</h2>
           <div>
-            <label class="block text-xs text-slate-300 mb-1">Default fast type</label>
-            <select id="default-fast-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"></select>
+            <label class="block text-sm md:text-xs text-slate-300 mb-1">Default fast type</label>
+            <select id="default-fast-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"></select>
           </div>
         </div>
 
         <div class="mt-4 space-y-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-1">Alerts</h2>
-          <label class="flex items-center justify-between text-xs">
+          <label class="flex items-center justify-between text-sm md:text-xs">
             <span class="text-slate-300">Alert when fast ends</span>
             <button id="toggle-end-alert" class="switch-btn"></button>
           </label>
-          <label class="flex items-center justify-between text-xs">
+          <label class="flex items-center justify-between text-sm md:text-xs">
             <span class="text-slate-300">Hourly reminder after end</span>
             <button id="toggle-hourly-alert" class="switch-btn"></button>
           </label>
-          <p class="text-[11px] text-slate-500">For best reliability, install the app (Add to Home Screen). Web alerts depend on OS/browser power rules.</p>
+          <p class="text-xs md:text-[11px] text-slate-500">For best reliability, install the app (Add to Home Screen). Web alerts depend on OS/browser power rules.</p>
         </div>
 
         <div class="mt-4 space-y-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-1">Data</h2>
-          <button id="export-data" class="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-medium">Export history (CSV)</button>
-          <button id="clear-data" class="w-full py-2.5 rounded-xl bg-red-600 text-slate-50 text-xs font-medium">Clear all data</button>
+          <button id="export-data" class="w-full py-3 md:py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm md:text-xs font-medium">Export history (CSV)</button>
+          <button id="clear-data" class="w-full py-3 md:py-2.5 rounded-xl bg-red-600 text-slate-50 text-sm md:text-xs font-medium">Clear all data</button>
         </div>
       </section>
     </main>
 
-    <nav class="fixed bottom-0 inset-x-0 border-t border-slate-800 bg-slate-950/95 backdrop-blur">
-      <div class="flex">
-        <button data-tab="timer" class="nav-btn flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-slate-100 nav-btn-active">
-          <span class="mb-0.5">Timer</span>
+    <nav class="fixed bottom-0 inset-x-0 border-t border-slate-800 bg-slate-950/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
+      <div class="flex h-20 md:h-14">
+        <button data-tab="timer" data-label="Timer" class="nav-btn flex-1 flex items-center justify-center text-slate-100 nav-btn-active">
+          <div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+            <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="13" r="9"></circle>
+              <path d="M12 10v3l2 2"></path>
+              <path d="M9 2h6"></path>
+            </svg>
+            <span class="hidden md:inline text-xs">Timer</span>
+          </div>
         </button>
-        <button data-tab="history" class="nav-btn flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-slate-500">
-          <span class="mb-0.5">History</span>
+
+        <button data-tab="history" data-label="History" class="nav-btn flex-1 flex items-center justify-center text-slate-500">
+          <div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+            <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v5h5"></path>
+              <path d="M3.05 13a9 9 0 1 0 .5-4"></path>
+              <path d="M12 7v5l4 2"></path>
+            </svg>
+            <span class="hidden md:inline text-xs">History</span>
+          </div>
         </button>
-        <button data-tab="settings" class="nav-btn flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-slate-500">
-          <span class="mb-0.5">Settings</span>
+
+        <button data-tab="settings" data-label="Settings" class="nav-btn flex-1 flex items-center justify-center text-slate-500">
+          <div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+            <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path>
+              <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06a2.2 2.2 0 1 1-3.11 3.11l-.06-.06A1.8 1.8 0 0 0 15 19.4a1.8 1.8 0 0 0-1 .33 1.8 1.8 0 0 0-.9 1.57V21a2.2 2.2 0 1 1-4.4 0v-.1a1.8 1.8 0 0 0-.9-1.57 1.8 1.8 0 0 0-1-.33 1.8 1.8 0 0 0-1.98.36l-.06.06a2.2 2.2 0 1 1-3.11-3.11l.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-.33-1 1.8 1.8 0 0 0-1.57-.9H2.6a2.2 2.2 0 1 1 0-4.4h.1a1.8 1.8 0 0 0 1.57-.9 1.8 1.8 0 0 0 .33-1A1.8 1.8 0 0 0 4.24 4.82l-.06-.06A2.2 2.2 0 1 1 7.3 1.65l.06.06A1.8 1.8 0 0 0 9 2.6c.33 0 .67-.11 1-.33A1.8 1.8 0 0 0 10.9.7V.6a2.2 2.2 0 1 1 4.4 0v.1a1.8 1.8 0 0 0 .9 1.57c.33.22.67.33 1 .33a1.8 1.8 0 0 0 1.98-.36l.06-.06a2.2 2.2 0 1 1 3.11 3.11l-.06.06A1.8 1.8 0 0 0 19.4 9c0 .33.11.67.33 1 .22.33.57.67.9.9h.1a2.2 2.2 0 1 1 0 4.4h-.1a1.8 1.8 0 0 0-1.57.9c-.22.33-.33.67-.33 1Z"></path>
+            </svg>
+            <span class="hidden md:inline text-xs">Settings</span>
+          </div>
         </button>
       </div>
     </nav>
@@ -157,13 +180,13 @@
     <div class="absolute inset-x-0 bottom-0 rounded-t-3xl bg-slate-950 border-t border-slate-800 p-4 max-h-[65vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-2">
         <div>
-          <div id="modal-type-label" class="text-sm font-medium text-slate-50"></div>
-          <div id="modal-type-duration" class="text-[11px] text-slate-400"></div>
+          <div id="modal-type-label" class="text-base md:text-sm font-medium text-slate-50"></div>
+          <div id="modal-type-duration" class="text-xs md:text-[11px] text-slate-400"></div>
         </div>
-        <button id="modal-close" class="text-xs px-2 py-1 rounded-full bg-slate-900 border border-slate-700">Close</button>
+        <button id="modal-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full bg-slate-900 border border-slate-700">Close</button>
       </div>
-      <ul id="modal-bullets" class="list-disc list-inside text-xs text-slate-300 space-y-1 mb-3"></ul>
-      <button id="modal-use-type" class="w-full py-2.5 rounded-full bg-brand-500 text-slate-950 text-xs font-semibold">Use this fast type</button>
+      <ul id="modal-bullets" class="list-disc list-inside text-sm md:text-xs text-slate-300 space-y-1 mb-3"></ul>
+      <button id="modal-use-type" class="w-full py-3 md:py-2.5 rounded-full bg-brand-500 text-slate-950 text-sm md:text-xs font-semibold">Use this fast type</button>
     </div>
   </div>
 
@@ -171,16 +194,16 @@
     <div class="absolute inset-0 bg-black/50"></div>
     <div class="absolute inset-x-0 bottom-0 rounded-t-3xl bg-slate-950 border-t border-slate-800 p-4">
       <div class="flex items-center justify-between mb-3">
-        <div class="text-sm font-medium text-slate-50">Edit start time</div>
-        <button id="edit-start-close" class="text-xs px-2 py-1 rounded-full bg-slate-900 border border-slate-700">Close</button>
+        <div class="text-base md:text-sm font-medium text-slate-50">Edit start time</div>
+        <button id="edit-start-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full bg-slate-900 border border-slate-700">Close</button>
       </div>
-      <label class="block text-xs text-slate-300 mb-1">Start time</label>
-      <input id="edit-start-input" type="datetime-local" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
+      <label class="block text-sm md:text-xs text-slate-300 mb-1">Start time</label>
+      <input id="edit-start-input" type="datetime-local" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
       <div class="flex gap-2 mt-3">
-        <button id="edit-start-now" class="flex-1 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-medium">Set to now</button>
-        <button id="edit-start-save" class="flex-1 py-2.5 rounded-xl bg-brand-500 text-slate-950 text-xs font-semibold">Save</button>
+        <button id="edit-start-now" class="flex-1 py-3 md:py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm md:text-xs font-medium">Set to now</button>
+        <button id="edit-start-save" class="flex-1 py-3 md:py-2.5 rounded-xl bg-brand-500 text-slate-950 text-sm md:text-xs font-semibold">Save</button>
       </div>
-      <div class="text-[11px] text-slate-500 mt-2">End time updates automatically to keep the planned duration.</div>
+      <div class="text-xs md:text-[11px] text-slate-500 mt-2">End time updates automatically to keep the planned duration.</div>
     </div>
   </div>
 
