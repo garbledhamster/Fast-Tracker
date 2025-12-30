@@ -1,5 +1,17 @@
 body { -webkit-tap-highlight-color: transparent; }
 
+#app {
+  width: min(100%, 960px);
+  margin: 0 auto;
+}
+
+#app > nav {
+  width: min(100%, 960px);
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
 .switch-btn {
   width: 40px;
   height: 22px;
