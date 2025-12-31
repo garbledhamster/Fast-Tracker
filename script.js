@@ -9,9 +9,17 @@ import {
   browserLocalPersistence,
   browserSessionPersistence
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-const STORAGE_KEY = "fastingTrackerStateV5";
+const ENCRYPTED_CACHE_KEY = "fastingTrackerEncryptedStateV1";
 const RING_CIRC = 2 * Math.PI * 80;
+const ENCRYPTION_VERSION = 1;
+const PBKDF2_ITERATIONS = 310000;
 
 const FAST_TYPES = [
   {
@@ -152,6 +160,7 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
 
 let state = clone(defaultState);
 let selectedFastTypeId = defaultState.settings.defaultFastTypeId || FAST_TYPES[0].id;
@@ -163,6 +172,10 @@ let toastHandle = null;
 let swReg = null;
 let appInitialized = false;
 let authMode = "sign-in";
+let cryptoKey = null;
+let keySalt = null;
+let pendingPassword = null;
+let needsUnlock = false;
 
 let navHoldTimer = null;
 let navHoldShown = false;
@@ -176,24 +189,162 @@ document.addEventListener("DOMContentLoaded", () => {
 function $(id) { return document.getElementById(id); }
 function clone(x) { return JSON.parse(JSON.stringify(x)); }
 
-function loadState() {
+function decodeBase64(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function encodeBase64(bytes) {
+  let binary = "";
+  bytes.forEach((b) => {
+    binary += String.fromCharCode(b);
+  });
+  return btoa(binary);
+}
+
+function getStateDocRef(uid) {
+  return doc(db, "users", uid, "fastingState", "state");
+}
+
+function getEncryptedCache() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return clone(defaultState);
-    const parsed = JSON.parse(raw);
-    const merged = clone(defaultState);
-    merged.settings = Object.assign(merged.settings, parsed.settings || {});
-    merged.activeFast = parsed.activeFast || null;
-    merged.history = Array.isArray(parsed.history) ? parsed.history : [];
-    merged.reminders = Object.assign(merged.reminders, parsed.reminders || {});
-    return merged;
+    const raw = localStorage.getItem(ENCRYPTED_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
   } catch {
-    return clone(defaultState);
+    return null;
   }
 }
 
-function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+function setEncryptedCache(payload) {
+  try {
+    localStorage.setItem(ENCRYPTED_CACHE_KEY, JSON.stringify(payload));
+  } catch {}
+}
+
+function mergeStateWithDefaults(parsed) {
+  const merged = clone(defaultState);
+  merged.settings = Object.assign(merged.settings, parsed.settings || {});
+  merged.activeFast = parsed.activeFast || null;
+  merged.history = Array.isArray(parsed.history) ? parsed.history : [];
+  merged.reminders = Object.assign(merged.reminders, parsed.reminders || {});
+  return merged;
+}
+
+async function deriveKeyFromPassword(password, saltBytes) {
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: saltBytes,
+      iterations: PBKDF2_ITERATIONS,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function encryptStatePayload() {
+  if (!cryptoKey) throw new Error("missing-key");
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encodedState = new TextEncoder().encode(JSON.stringify(state));
+  const cipherBuffer = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    cryptoKey,
+    encodedState
+  );
+  return {
+    version: ENCRYPTION_VERSION,
+    iv: encodeBase64(iv),
+    ciphertext: encodeBase64(new Uint8Array(cipherBuffer))
+  };
+}
+
+async function decryptStatePayload(payload) {
+  if (!cryptoKey) throw new Error("missing-key");
+  const iv = decodeBase64(payload.iv);
+  const ciphertext = decodeBase64(payload.ciphertext);
+  const decryptedBuffer = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    cryptoKey,
+    ciphertext
+  );
+  const decoded = new TextDecoder().decode(decryptedBuffer);
+  return JSON.parse(decoded);
+}
+
+async function resolveEncryptedPayload(uid) {
+  try {
+    const snap = await getDoc(getStateDocRef(uid));
+    if (snap.exists()) {
+      return snap.data()?.payload || null;
+    }
+  } catch {}
+  return getEncryptedCache();
+}
+
+async function loadState() {
+  const user = auth.currentUser;
+  if (!user) return clone(defaultState);
+
+  const payload = await resolveEncryptedPayload(user.uid);
+  if (!payload) {
+    if (!pendingPassword) throw new Error("missing-password");
+    keySalt = crypto.getRandomValues(new Uint8Array(16));
+    cryptoKey = await deriveKeyFromPassword(pendingPassword, keySalt);
+    pendingPassword = null;
+    return clone(defaultState);
+  }
+
+  if (!payload.salt || !payload.iv || !payload.ciphertext) {
+    throw new Error("invalid-payload");
+  }
+
+  const saltBytes = decodeBase64(payload.salt);
+  if (!keySalt) keySalt = saltBytes;
+
+  if (!cryptoKey) {
+    if (!pendingPassword) throw new Error("missing-password");
+    keySalt = saltBytes;
+    cryptoKey = await deriveKeyFromPassword(pendingPassword, saltBytes);
+    pendingPassword = null;
+  }
+
+  try {
+    const decrypted = await decryptStatePayload(payload);
+    return mergeStateWithDefaults(decrypted);
+  } catch {
+    cryptoKey = null;
+    keySalt = null;
+    throw new Error("decrypt-failed");
+  }
+}
+
+async function saveState() {
+  const user = auth.currentUser;
+  if (!user || !cryptoKey || !keySalt) return;
+
+  const payload = await encryptStatePayload();
+  payload.salt = encodeBase64(keySalt);
+
+  try {
+    await setDoc(getStateDocRef(user.uid), { payload }, { merge: true });
+  } catch {}
+
+  setEncryptedCache(payload);
 }
 
 function initUI() {
@@ -207,21 +358,24 @@ function initUI() {
 }
 
 function initAuthListener() {
-  onAuthStateChanged(auth, user => {
+  onAuthStateChanged(auth, async user => {
     if (user) {
-      loadAppState();
-      if (!appInitialized) {
-        initUI();
-        startTick();
-        registerServiceWorker();
-        appInitialized = true;
-      } else {
-        renderAll();
+      try {
+        await completeAuthFlow();
+      } catch (err) {
+        if (err?.message === "missing-password" || err?.message === "decrypt-failed") {
+          showReauthPrompt("Please re-enter your password to decrypt your data.");
+          return;
+        }
+        showReauthPrompt("We couldn't load your encrypted data. Please sign in again.");
       }
-      setAuthVisibility(true);
     } else {
       setAuthVisibility(false);
       stopTick();
+      cryptoKey = null;
+      keySalt = null;
+      pendingPassword = null;
+      needsUnlock = false;
     }
   });
 }
@@ -252,6 +406,20 @@ function updateAuthMode() {
   $("auth-error").textContent = "";
 }
 
+function showReauthPrompt(message) {
+  authMode = "sign-in";
+  updateAuthMode();
+  if (auth.currentUser?.email) {
+    $("auth-email").value = auth.currentUser.email;
+  }
+  $("auth-password").value = "";
+  const errorEl = $("auth-error");
+  errorEl.textContent = message;
+  errorEl.classList.remove("hidden");
+  needsUnlock = true;
+  setAuthVisibility(false);
+}
+
 function setAuthVisibility(isAuthed) {
   $("app").classList.toggle("hidden", !isAuthed);
   $("auth-screen").classList.toggle("hidden", isAuthed);
@@ -280,14 +448,40 @@ async function handleAuthSubmit(e) {
     } else {
       await signInWithEmailAndPassword(auth, email, password);
     }
+    pendingPassword = password;
+    if (needsUnlock && auth.currentUser) {
+      try {
+        await completeAuthFlow();
+      } catch (err) {
+        if (err?.message === "decrypt-failed") {
+          showReauthPrompt("Incorrect password. Please try again.");
+          return;
+        }
+        showReauthPrompt("We couldn't unlock your data. Please try again.");
+      }
+    }
   } catch (err) {
     errorEl.textContent = err?.message || "Unable to authenticate. Please try again.";
     errorEl.classList.remove("hidden");
   }
 }
 
-function loadAppState() {
-  state = loadState();
+async function completeAuthFlow() {
+  await loadAppState();
+  if (!appInitialized) {
+    initUI();
+    startTick();
+    registerServiceWorker();
+    appInitialized = true;
+  } else {
+    renderAll();
+  }
+  needsUnlock = false;
+  setAuthVisibility(true);
+}
+
+async function loadAppState() {
+  state = await loadState();
   selectedFastTypeId = state.settings.defaultFastTypeId || FAST_TYPES[0].id;
   pendingTypeId = null;
   calendarMonth = startOfMonth(new Date());
@@ -457,7 +651,7 @@ function usePendingFastType() {
   selectedFastTypeId = pendingTypeId;
   state.settings.defaultFastTypeId = selectedFastTypeId;
   if (state.activeFast) applyTypeToActiveFast(selectedFastTypeId);
-  saveState();
+  void saveState();
   closeFastTypeModal();
   highlightSelectedFastType();
   updateTimer();
@@ -476,14 +670,14 @@ function initButtons() {
 
   $("toggle-end-alert").addEventListener("click", () => {
     state.settings.notifyOnEnd = !state.settings.notifyOnEnd;
-    saveState();
+    void saveState();
     renderSettings();
     renderAlertsPill();
   });
 
   $("toggle-hourly-alert").addEventListener("click", () => {
     state.settings.hourlyReminders = !state.settings.hourlyReminders;
-    saveState();
+    void saveState();
     renderSettings();
   });
 
@@ -499,7 +693,7 @@ function initButtons() {
   $("default-fast-select").addEventListener("change", e => {
     selectedFastTypeId = e.target.value;
     state.settings.defaultFastTypeId = selectedFastTypeId;
-    saveState();
+    void saveState();
     highlightSelectedFastType();
     if (!state.activeFast) renderTimerMetaIdle();
     updateTimer();
@@ -549,7 +743,7 @@ function startFast() {
     status: "active"
   };
   state.reminders = { endNotified: false, lastHourlyAt: null };
-  saveState();
+  void saveState();
   renderAll();
   showToast("Fast started");
 }
@@ -571,7 +765,7 @@ function stopFastAndLog() {
 
   state.activeFast = null;
   state.reminders = { endNotified: false, lastHourlyAt: null };
-  saveState();
+  void saveState();
 
   calendarMonth = startOfMonth(new Date());
   selectedDayKey = formatDateKey(new Date());
@@ -600,7 +794,7 @@ function cycleTimeMode() {
   const cur = state.settings.timeDisplayMode || "elapsed";
   const next = order[(order.indexOf(cur) + 1) % order.length];
   state.settings.timeDisplayMode = next;
-  saveState();
+  void saveState();
   updateTimer();
 }
 
@@ -714,7 +908,7 @@ async function onAlertsButton() {
     const res = await Notification.requestPermission();
     if (res !== "granted") { showToast("Permission not granted"); renderAlertsPill(); return; }
     state.settings.alertsEnabled = true;
-    saveState();
+    void saveState();
     renderAlertsPill();
     await sendNotification("Alerts enabled", "You’ll be notified when your fast ends.");
     showToast("Alerts enabled");
@@ -722,7 +916,7 @@ async function onAlertsButton() {
   }
 
   state.settings.alertsEnabled = !state.settings.alertsEnabled;
-  saveState();
+  void saveState();
   renderAlertsPill();
 
   if (state.settings.alertsEnabled) {
@@ -777,7 +971,7 @@ function handleAlerts() {
     if (state.settings.notifyOnEnd) sendNotification("Fast complete", "You reached your fasting goal.");
     state.reminders.endNotified = true;
     state.reminders.lastHourlyAt = now;
-    saveState();
+    void saveState();
     return;
   }
 
@@ -786,7 +980,7 @@ function handleAlerts() {
     if (now - last >= 3600000) {
       sendNotification("Extra hour fasted", "You’re past your target. Break your fast when ready.");
       state.reminders.lastHourlyAt = now;
-      saveState();
+      void saveState();
     }
   }
 }
@@ -813,7 +1007,7 @@ function saveEditedStartTime() {
   af.status = "active";
   state.reminders = { endNotified: false, lastHourlyAt: null };
 
-  saveState();
+  void saveState();
   closeEditStartModal();
   updateTimer();
   showToast("Start time updated");
@@ -868,7 +1062,7 @@ function clearAllData() {
   state = clone(defaultState);
   selectedFastTypeId = state.settings.defaultFastTypeId;
   pendingTypeId = null;
-  saveState();
+  void saveState();
   renderAll();
   showToast("Cleared");
 }
