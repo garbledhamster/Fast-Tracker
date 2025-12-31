@@ -155,12 +155,10 @@ const defaultState = {
   reminders: { endNotified: false, lastHourlyAt: null }
 };
 
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  appId: "YOUR_APP_ID"
-};
+const firebaseConfig = window.FIREBASE_CONFIG;
+if (!firebaseConfig?.apiKey || !firebaseConfig?.authDomain || !firebaseConfig?.projectId || !firebaseConfig?.appId) {
+  throw new Error("Missing Firebase configuration. Check firebase-config.js.");
+}
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
