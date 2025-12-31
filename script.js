@@ -1,3 +1,15 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
 const STORAGE_KEY = "fastingTrackerStateV5";
 const RING_CIRC = 2 * Math.PI * 80;
 
@@ -131,23 +143,34 @@ const defaultState = {
   reminders: { endNotified: false, lastHourlyAt: null }
 };
 
-let state = loadState();
-let selectedFastTypeId = state.settings.defaultFastTypeId || FAST_TYPES[0].id;
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+
+let state = clone(defaultState);
+let selectedFastTypeId = defaultState.settings.defaultFastTypeId || FAST_TYPES[0].id;
 let pendingTypeId = null;
 let calendarMonth = startOfMonth(new Date());
 let selectedDayKey = formatDateKey(new Date());
 let tickHandle = null;
 let toastHandle = null;
 let swReg = null;
+let appInitialized = false;
+let authMode = "sign-in";
 
 let navHoldTimer = null;
 let navHoldShown = false;
 let suppressNavClickEl = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  initUI();
-  startTick();
-  registerServiceWorker();
+  initAuthUI();
+  initAuthListener();
 });
 
 function $(id) { return document.getElementById(id); }
@@ -181,6 +204,94 @@ function initUI() {
   initSettings();
   initCalendar();
   renderAll();
+}
+
+function initAuthListener() {
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      loadAppState();
+      if (!appInitialized) {
+        initUI();
+        startTick();
+        registerServiceWorker();
+        appInitialized = true;
+      } else {
+        renderAll();
+      }
+      setAuthVisibility(true);
+    } else {
+      setAuthVisibility(false);
+      stopTick();
+    }
+  });
+}
+
+function initAuthUI() {
+  const form = $("auth-form");
+  const toggle = $("auth-toggle");
+
+  form.addEventListener("submit", handleAuthSubmit);
+  toggle.addEventListener("click", () => {
+    authMode = authMode === "sign-in" ? "sign-up" : "sign-in";
+    updateAuthMode();
+  });
+
+  updateAuthMode();
+}
+
+function updateAuthMode() {
+  const isSignUp = authMode === "sign-up";
+  $("auth-title").textContent = isSignUp ? "Create your account" : "Welcome back";
+  $("auth-subtitle").textContent = isSignUp
+    ? "Sign up to start tracking your fasts across devices."
+    : "Sign in to keep your fasting history synced.";
+  $("auth-submit").textContent = isSignUp ? "Create account" : "Sign in";
+  $("auth-toggle-text").textContent = isSignUp ? "Already have an account?" : "New here?";
+  $("auth-toggle").textContent = isSignUp ? "Sign in" : "Create an account";
+  $("auth-error").classList.add("hidden");
+  $("auth-error").textContent = "";
+}
+
+function setAuthVisibility(isAuthed) {
+  $("app").classList.toggle("hidden", !isAuthed);
+  $("auth-screen").classList.toggle("hidden", isAuthed);
+}
+
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  const email = $("auth-email").value.trim();
+  const password = $("auth-password").value;
+  const remember = $("auth-remember").checked;
+  const errorEl = $("auth-error");
+
+  errorEl.classList.add("hidden");
+  errorEl.textContent = "";
+
+  if (!email || !password) {
+    errorEl.textContent = "Please enter both an email and password.";
+    errorEl.classList.remove("hidden");
+    return;
+  }
+
+  try {
+    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+    if (authMode === "sign-up") {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+    }
+  } catch (err) {
+    errorEl.textContent = err?.message || "Unable to authenticate. Please try again.";
+    errorEl.classList.remove("hidden");
+  }
+}
+
+function loadAppState() {
+  state = loadState();
+  selectedFastTypeId = state.settings.defaultFastTypeId || FAST_TYPES[0].id;
+  pendingTypeId = null;
+  calendarMonth = startOfMonth(new Date());
+  selectedDayKey = formatDateKey(new Date());
 }
 
 function initTabs() {
@@ -378,6 +489,9 @@ function initButtons() {
 
   $("export-data").addEventListener("click", exportCSV);
   $("clear-data").addEventListener("click", clearAllData);
+  $("sign-out").addEventListener("click", async () => {
+    try { await signOut(auth); } catch {}
+  });
 
   $("calendar-prev").addEventListener("click", () => { calendarMonth = addMonths(calendarMonth, -1); renderCalendar(); renderDayDetails(); });
   $("calendar-next").addEventListener("click", () => { calendarMonth = addMonths(calendarMonth, 1); renderCalendar(); renderDayDetails(); });
@@ -473,6 +587,12 @@ function startTick() {
   }, 1000);
   updateTimer();
   renderAlertsPill();
+}
+
+function stopTick() {
+  if (!tickHandle) return;
+  clearInterval(tickHandle);
+  tickHandle = null;
 }
 
 function cycleTimeMode() {
