@@ -37,6 +37,26 @@ body.bg-slate-950 {
   transform: translateX(-50%);
 }
 
+@media (min-width: 768px) {
+  #app > nav {
+    width: 100%;
+    left: 0;
+    right: 0;
+    transform: none;
+  }
+
+  #app > nav > div {
+    height: 3rem;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  #app > nav .nav-btn {
+    flex: 0 0 auto;
+    width: 120px;
+  }
+}
+
 .switch-btn {
   width: 40px;
   height: 22px;
