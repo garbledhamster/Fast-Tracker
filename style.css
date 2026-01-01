@@ -171,6 +171,11 @@ body.bg-slate-950 {
   background: color-mix(in srgb, var(--primary-color) 18%, transparent);
 }
 
+.ring-emoji-btn.is-upcoming {
+  opacity: 0.55;
+  filter: saturate(0.7);
+}
+
 .ring-emoji-btn.is-selected {
   background: var(--primary-color);
   border-color: var(--primary-color);

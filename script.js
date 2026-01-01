@@ -2099,29 +2099,16 @@ function updateRingEmojiProgress(type) {
     ? Math.max(0, (Date.now() - state.activeFast.startTimestamp) / 3600000)
     : null;
   const milestones = Array.isArray(type?.milestones) ? type.milestones : [];
-  const title = $("ring-emoji-title");
-  const detail = $("ring-emoji-detail");
-  let visibleCount = 0;
 
   layer.querySelectorAll(".ring-emoji-btn").forEach(btn => {
     const hour = Number(btn.dataset.hour);
     const isActive = elapsedHours !== null && elapsedHours >= hour;
-    const isVisible = elapsedHours === null || elapsedHours >= hour;
-    btn.hidden = !isVisible;
-    if (isVisible) visibleCount += 1;
+    const isUpcoming = elapsedHours !== null && elapsedHours < hour;
     if (isActive) btn.classList.add("is-active");
     else btn.classList.remove("is-active");
+    if (isUpcoming) btn.classList.add("is-upcoming");
+    else btn.classList.remove("is-upcoming");
   });
-
-  if (elapsedHours !== null && visibleCount === 0 && milestones.length) {
-    ringEmojiSelectionKey = null;
-    ringEmojiSelectionDetail = null;
-    if (title && detail) {
-      title.textContent = "Milestones unlock as you fast";
-      detail.textContent = `First milestone at hour ${milestones[0].hour}.`;
-    }
-    return;
-  }
 
   if (ringEmojiSelectionKey) {
     const selectedButton = layer.querySelector(`[data-type-id="${type.id}"][data-hour="${ringEmojiSelectionKey.split("-")[1]}"]`);
