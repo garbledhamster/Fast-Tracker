@@ -1489,7 +1489,7 @@ function initFastTypeChips() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.dataset.typeId = type.id;
-    btn.className = "w-[35px] h-[35px] flex items-center justify-center text-center leading-none whitespace-normal rounded-full border text-[11px] md:text-[10px] border-slate-700 text-slate-100 bg-slate-900/80";
+    btn.className = "fast-type-chip text-[11px] md:text-[10px]";
     btn.textContent = type.label;
     btn.addEventListener("click", () => {
       pendingTypeId = type.id;
@@ -1506,11 +1506,9 @@ function highlightSelectedFastType() {
   chips.forEach(chip => {
     const isActive = chip.dataset.typeId === current;
     if (isActive) {
-      chip.classList.add("bg-brand-500", "text-slate-950", "border-brand-500");
-      chip.classList.remove("bg-slate-900/80", "text-slate-100", "border-slate-700");
+      chip.classList.add("fast-type-chip--active");
     } else {
-      chip.classList.remove("bg-brand-500", "text-slate-950", "border-brand-500");
-      chip.classList.add("bg-slate-900/80", "text-slate-100", "border-slate-700");
+      chip.classList.remove("fast-type-chip--active");
     }
   });
 }
@@ -2330,24 +2328,24 @@ function renderCalendar() {
   for (let i = 0; i < 42; i++) {
     const cell = document.createElement("button");
     cell.type = "button";
-    cell.className = "aspect-square rounded-xl flex flex-col items-center justify-center text-[12px] md:text-[11px]";
+    cell.className = "calendar-day aspect-square flex flex-col items-center justify-center text-[12px] md:text-[11px]";
 
     let dayNum, date, isCurrent = false;
 
     if (i < startWeekday) {
       dayNum = daysInPrev - startWeekday + i + 1;
       date = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), dayNum);
-      cell.classList.add("text-slate-600");
+      cell.classList.add("calendar-day--muted");
     } else if (i >= startWeekday + daysInMonth) {
       dayNum = i - startWeekday - daysInMonth + 1;
       const nextMonth = addMonths(calendarMonth, 1);
       date = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dayNum);
-      cell.classList.add("text-slate-600");
+      cell.classList.add("calendar-day--muted");
     } else {
       dayNum = i - startWeekday + 1;
       date = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), dayNum);
       isCurrent = true;
-      cell.classList.add("text-slate-200");
+      cell.classList.add("calendar-day--current");
     }
 
     const key = formatDateKey(date);
@@ -2356,13 +2354,13 @@ function renderCalendar() {
     const isSelected = key === selectedDayKey;
     const isToday = key === todayKey;
 
-    if (isSelected) cell.classList.add("bg-brand-500/20", "border", "border-brand-500");
-    else if (hasFast) cell.classList.add("bg-slate-800");
-    else cell.classList.add("bg-slate-900");
+    if (isSelected) cell.classList.add("calendar-day--selected");
+    else if (hasFast) cell.classList.add("calendar-day--has-fast");
+    else cell.classList.add("calendar-day--empty");
 
     if (isToday && isCurrent) {
       const dot = document.createElement("span");
-      dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-brand-500 mb-0.5";
+      dot.className = "calendar-day-dot w-2 h-2 md:w-1.5 md:h-1.5 rounded-full mb-0.5";
       cell.appendChild(dot);
     }
 
@@ -2372,7 +2370,7 @@ function renderCalendar() {
 
     if (hasFast) {
       const tiny = document.createElement("span");
-      tiny.className = "mt-0.5 text-[10px] md:text-[9px] text-cyan-100";
+      tiny.className = "calendar-day-hours mt-0.5 text-[10px] md:text-[9px]";
       tiny.textContent = Math.round(data.totalHours) + "h";
       cell.appendChild(tiny);
     }
