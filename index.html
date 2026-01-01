@@ -84,6 +84,8 @@
                 <circle id="progress-ring" cx="100" cy="100" r="80" stroke="#06b6d4" stroke-width="16" stroke-linecap="round" fill="none" stroke-dasharray="502.6548245743669" stroke-dashoffset="502.6548245743669"></circle>
               </svg>
 
+              <div id="ring-emoji-layer" class="ring-emoji-layer absolute inset-0"></div>
+
               <div class="absolute inset-0 flex flex-col items-center justify-center select-none">
                 <div class="mb-3">
                   <div id="timer-type" class="text-sm md:text-xs text-cyan-100 px-3 py-1 md:px-2 md:py-0.5 rounded-full bg-cyan-600/25 border border-cyan-500/35">No fast selected</div>
@@ -97,6 +99,11 @@
                   <div id="timer-status" class="text-xs md:text-[11px] uppercase tracking-[0.2em] text-slate-500">IDLE</div>
                 </div>
               </div>
+            </div>
+
+            <div class="mt-4 rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3 text-center">
+              <div id="ring-emoji-title" class="text-sm md:text-xs text-slate-100">Tap an emoji to see what’s happening</div>
+              <div id="ring-emoji-detail" class="text-xs md:text-[11px] text-slate-400 mt-1"></div>
             </div>
 
             <!-- Started / Target end row under ring -->

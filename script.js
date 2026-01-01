@@ -55,6 +55,32 @@ const FAST_TYPES = [
       "4h after eating: Post-absorptive phase; gastric emptying is mostly complete and insulin is falling.",
       "8h after eating: Lower insulin allows more fat release for fuel as the overnight fast settles in.",
       "Timing varies with meal size, sleep, and activity."
+    ],
+    milestones: [
+      {
+        hour: 1,
+        emoji: "🍽️",
+        label: "Digesting",
+        detail: "1h after eating: Rest-and-digest mode is active while the stomach and pancreas secrete enzymes."
+      },
+      {
+        hour: 2,
+        emoji: "🍬",
+        label: "Nutrient uptake",
+        detail: "2h after eating: Glucose absorption peaks; insulin guides nutrients into muscle and liver glycogen."
+      },
+      {
+        hour: 4,
+        emoji: "🧹",
+        label: "Cleanup mode",
+        detail: "4h after eating: Post-absorptive phase; gastric emptying is mostly complete and insulin is falling."
+      },
+      {
+        hour: 8,
+        emoji: "🔥",
+        label: "Fat release",
+        detail: "8h after eating: Lower insulin allows more fat release for fuel as the overnight fast settles in."
+      }
     ]
   },
   {
@@ -68,6 +94,38 @@ const FAST_TYPES = [
       "8h after eating: Glycogen release keeps blood sugar steady while fat use begins to rise.",
       "12h after eating: Fat oxidation increases; early ketones may appear for some people.",
       "Timing varies with meal size, sleep, and activity."
+    ],
+    milestones: [
+      {
+        hour: 1,
+        emoji: "🍽️",
+        label: "Digesting",
+        detail: "1h after eating: Rest-and-digest signaling supports active digestion and nutrient breakdown."
+      },
+      {
+        hour: 2,
+        emoji: "🍬",
+        label: "Nutrient uptake",
+        detail: "2h after eating: Blood glucose is still rising; insulin helps store glucose as glycogen."
+      },
+      {
+        hour: 4,
+        emoji: "🧹",
+        label: "Cleanup mode",
+        detail: "4h after eating: The gut starts its cleaning waves (migrating motor complex) as insulin drops."
+      },
+      {
+        hour: 8,
+        emoji: "🔥",
+        label: "Fat release",
+        detail: "8h after eating: Glycogen release keeps blood sugar steady while fat use begins to rise."
+      },
+      {
+        hour: 12,
+        emoji: "⚡",
+        label: "Fat oxidation",
+        detail: "12h after eating: Fat oxidation increases; early ketones may appear for some people."
+      }
     ]
   },
   {
@@ -82,6 +140,44 @@ const FAST_TYPES = [
       "12h after eating: Fat oxidation increases as liver glycogen declines.",
       "14h after eating: Low insulin supports more reliance on fat and stable morning energy.",
       "Timing varies with meal size, sleep, and activity."
+    ],
+    milestones: [
+      {
+        hour: 1,
+        emoji: "🍽️",
+        label: "Digesting",
+        detail: "1h after eating: Digestive enzymes and bile are active under parasympathetic control."
+      },
+      {
+        hour: 2,
+        emoji: "🍬",
+        label: "Nutrient uptake",
+        detail: "2h after eating: Nutrient absorption and insulin activity remain elevated."
+      },
+      {
+        hour: 4,
+        emoji: "🧹",
+        label: "Cleanup mode",
+        detail: "4h after eating: Post-absorptive phase; the gut begins cleaning cycles between meals."
+      },
+      {
+        hour: 8,
+        emoji: "🔥",
+        label: "Fat release",
+        detail: "8h after eating: Insulin is lower; fat release for energy becomes more noticeable."
+      },
+      {
+        hour: 12,
+        emoji: "⚡",
+        label: "Fat oxidation",
+        detail: "12h after eating: Fat oxidation increases as liver glycogen declines."
+      },
+      {
+        hour: 14,
+        emoji: "🌤️",
+        label: "Stable energy",
+        detail: "14h after eating: Low insulin supports more reliance on fat and stable morning energy."
+      }
     ]
   },
   {
@@ -96,6 +192,44 @@ const FAST_TYPES = [
       "12h after eating: Fat oxidation increases and ketones may begin to rise modestly.",
       "16h after eating: Liver glycogen is lower, supporting a deeper shift to fat-based fuel.",
       "Timing varies with meal size, sleep, and activity."
+    ],
+    milestones: [
+      {
+        hour: 1,
+        emoji: "🍽️",
+        label: "Digesting",
+        detail: "1h after eating: Rest-and-digest is dominant while the stomach breaks down food."
+      },
+      {
+        hour: 2,
+        emoji: "🍬",
+        label: "Nutrient uptake",
+        detail: "2h after eating: Glucose uptake peaks; insulin promotes storage and replenishes glycogen."
+      },
+      {
+        hour: 4,
+        emoji: "🧹",
+        label: "Cleanup mode",
+        detail: "4h after eating: Post-absorptive phase; the gut’s cleaning cycles can resume."
+      },
+      {
+        hour: 8,
+        emoji: "🔥",
+        label: "Fat release",
+        detail: "8h after eating: Lower insulin supports more fat release for fuel."
+      },
+      {
+        hour: 12,
+        emoji: "⚡",
+        label: "Fat oxidation",
+        detail: "12h after eating: Fat oxidation increases and ketones may begin to rise modestly."
+      },
+      {
+        hour: 16,
+        emoji: "🌙",
+        label: "Deep fat fuel",
+        detail: "16h after eating: Liver glycogen is lower, supporting a deeper shift to fat-based fuel."
+      }
     ]
   },
   {
@@ -111,6 +245,50 @@ const FAST_TYPES = [
       "16h after eating: Liver glycogen is lower, supporting longer fat-based fueling.",
       "18h after eating: Many feel steadier energy and reduced snacking cues.",
       "Timing varies with meal size, sleep, and activity."
+    ],
+    milestones: [
+      {
+        hour: 1,
+        emoji: "🍽️",
+        label: "Digesting",
+        detail: "1h after eating: Digestive enzymes and bile release are active in rest-and-digest mode."
+      },
+      {
+        hour: 2,
+        emoji: "🍬",
+        label: "Nutrient uptake",
+        detail: "2h after eating: Glucose absorption is high; insulin supports storage in muscle and liver."
+      },
+      {
+        hour: 4,
+        emoji: "🧹",
+        label: "Cleanup mode",
+        detail: "4h after eating: Post-absorptive phase; migrating motor complex activity may start."
+      },
+      {
+        hour: 8,
+        emoji: "🔥",
+        label: "Fat release",
+        detail: "8h after eating: Insulin is lower and fat use increases."
+      },
+      {
+        hour: 12,
+        emoji: "⚡",
+        label: "Fat oxidation",
+        detail: "12h after eating: Fat oxidation rises; ketones may begin to climb modestly."
+      },
+      {
+        hour: 16,
+        emoji: "🌙",
+        label: "Deep fat fuel",
+        detail: "16h after eating: Liver glycogen is lower, supporting longer fat-based fueling."
+      },
+      {
+        hour: 18,
+        emoji: "🧠",
+        label: "Steady focus",
+        detail: "18h after eating: Many feel steadier energy and reduced snacking cues."
+      }
     ]
   },
   {
@@ -126,6 +304,50 @@ const FAST_TYPES = [
       "16h after eating: Glycogen stores are reduced; fat-based fuel is more prominent.",
       "20h after eating: Longer fasting window supports appetite discipline before refeed.",
       "Timing varies with meal size, sleep, and activity."
+    ],
+    milestones: [
+      {
+        hour: 1,
+        emoji: "🍽️",
+        label: "Digesting",
+        detail: "1h after eating: Active digestion and enzyme secretion dominate."
+      },
+      {
+        hour: 2,
+        emoji: "🍬",
+        label: "Nutrient uptake",
+        detail: "2h after eating: Glucose absorption and insulin remain elevated."
+      },
+      {
+        hour: 4,
+        emoji: "🧹",
+        label: "Cleanup mode",
+        detail: "4h after eating: Post-absorptive phase; gut motility shifts to cleaning cycles."
+      },
+      {
+        hour: 8,
+        emoji: "🔥",
+        label: "Fat release",
+        detail: "8h after eating: Lower insulin supports more fat release for energy."
+      },
+      {
+        hour: 12,
+        emoji: "⚡",
+        label: "Fat oxidation",
+        detail: "12h after eating: Fat oxidation increases; ketone production can begin to rise."
+      },
+      {
+        hour: 16,
+        emoji: "🌙",
+        label: "Deep fat fuel",
+        detail: "16h after eating: Glycogen stores are reduced; fat-based fuel is more prominent."
+      },
+      {
+        hour: 20,
+        emoji: "🧘",
+        label: "Discipline window",
+        detail: "20h after eating: Longer fasting window supports appetite discipline before refeed."
+      }
     ]
   },
   {
@@ -141,6 +363,50 @@ const FAST_TYPES = [
       "16h after eating: Liver glycogen is low; fat-based fueling is dominant.",
       "24h after eating: Longer fasts emphasize hydration and a gentle refeed.",
       "Timing varies with meal size, sleep, and activity."
+    ],
+    milestones: [
+      {
+        hour: 1,
+        emoji: "🍽️",
+        label: "Digesting",
+        detail: "1h after eating: Rest-and-digest remains active as the stomach processes food."
+      },
+      {
+        hour: 2,
+        emoji: "🍬",
+        label: "Nutrient uptake",
+        detail: "2h after eating: Nutrient absorption peaks; insulin supports storage."
+      },
+      {
+        hour: 4,
+        emoji: "🧹",
+        label: "Cleanup mode",
+        detail: "4h after eating: Post-absorptive phase; gut cleaning cycles resume."
+      },
+      {
+        hour: 8,
+        emoji: "🔥",
+        label: "Fat release",
+        detail: "8h after eating: Insulin is lower; fat use continues to rise."
+      },
+      {
+        hour: 12,
+        emoji: "⚡",
+        label: "Fat oxidation",
+        detail: "12h after eating: Fat oxidation and ketones increase modestly."
+      },
+      {
+        hour: 16,
+        emoji: "🌙",
+        label: "Deep fat fuel",
+        detail: "16h after eating: Liver glycogen is low; fat-based fueling is dominant."
+      },
+      {
+        hour: 24,
+        emoji: "💧",
+        label: "Hydration focus",
+        detail: "24h after eating: Longer fasts emphasize hydration and a gentle refeed."
+      }
     ]
   },
   {
@@ -157,6 +423,56 @@ const FAST_TYPES = [
       "24h after eating: Hydration and electrolytes become more important.",
       "36h after eating: Longer fasts should be broken gently with easy-to-digest foods.",
       "Timing varies with meal size, sleep, and activity."
+    ],
+    milestones: [
+      {
+        hour: 1,
+        emoji: "🍽️",
+        label: "Digesting",
+        detail: "1h after eating: Digestion is active and parasympathetic signaling is high."
+      },
+      {
+        hour: 2,
+        emoji: "🍬",
+        label: "Nutrient uptake",
+        detail: "2h after eating: Glucose absorption peaks; insulin guides storage."
+      },
+      {
+        hour: 4,
+        emoji: "🧹",
+        label: "Cleanup mode",
+        detail: "4h after eating: Post-absorptive phase; gut cleaning cycles can resume."
+      },
+      {
+        hour: 8,
+        emoji: "🔥",
+        label: "Fat release",
+        detail: "8h after eating: Lower insulin supports more fat release."
+      },
+      {
+        hour: 12,
+        emoji: "⚡",
+        label: "Fat oxidation",
+        detail: "12h after eating: Fat oxidation rises as glycogen declines."
+      },
+      {
+        hour: 16,
+        emoji: "🌙",
+        label: "Deep fat fuel",
+        detail: "16h after eating: Deeper reliance on fat-based fuel."
+      },
+      {
+        hour: 24,
+        emoji: "💧",
+        label: "Hydration focus",
+        detail: "24h after eating: Hydration and electrolytes become more important."
+      },
+      {
+        hour: 36,
+        emoji: "🥣",
+        label: "Gentle refeed",
+        detail: "36h after eating: Longer fasts should be broken gently with easy-to-digest foods."
+      }
     ]
   }
 ];
@@ -219,6 +535,9 @@ let suppressNavClickEl = null;
 // ✅ NEW: Notes overlay state (opens above other tabs)
 let currentTab = "timer";
 let lastNonNotesTab = "timer";
+let ringEmojiTypeId = null;
+let ringEmojiSelectionKey = null;
+let ringEmojiLayoutSize = 0;
 let notesOverlayOpen = false;
 let notesPortal = null;
 let notesBackdrop = null;
@@ -1592,6 +1911,114 @@ function cycleTimeMode() {
   updateTimer();
 }
 
+function ensureRingEmojis() {
+  const type = getActiveType();
+  const layer = $("ring-emoji-layer");
+  if (!layer || !type) return;
+  const size = layer.clientWidth;
+  const shouldRender = !layer.childElementCount || ringEmojiTypeId !== type.id || ringEmojiLayoutSize !== size;
+  if (shouldRender) {
+    renderRingEmojis(type, size);
+  } else {
+    updateRingEmojiProgress(type);
+  }
+}
+
+function renderRingEmojis(type, size) {
+  const layer = $("ring-emoji-layer");
+  const title = $("ring-emoji-title");
+  const detail = $("ring-emoji-detail");
+  if (!layer || !title || !detail) return;
+
+  ringEmojiTypeId = type.id;
+  ringEmojiLayoutSize = size;
+  layer.innerHTML = "";
+
+  const milestones = Array.isArray(type.milestones) ? type.milestones : [];
+  if (!milestones.length || !size) {
+    title.textContent = "Tap an emoji to see what’s happening";
+    detail.textContent = "";
+    return;
+  }
+
+  const radius = Math.max(size / 2 - 18, 0);
+  const center = size / 2;
+
+  milestones.forEach(milestone => {
+    const angle = (milestone.hour / type.durationHours) * 360 - 90;
+    const rad = angle * (Math.PI / 180);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ring-emoji-btn";
+    btn.textContent = milestone.emoji;
+    btn.style.left = `${center + Math.cos(rad) * radius}px`;
+    btn.style.top = `${center + Math.sin(rad) * radius}px`;
+    btn.dataset.hour = String(milestone.hour);
+    btn.dataset.typeId = type.id;
+    btn.addEventListener("click", () => selectRingEmoji(type, milestone));
+    layer.appendChild(btn);
+  });
+
+  const hasSelection = milestones.some(m => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
+  if (!hasSelection) ringEmojiSelectionKey = null;
+  if (ringEmojiSelectionKey) {
+    const selected = milestones.find(m => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
+    updateRingEmojiPanel(type, selected);
+  } else {
+    title.textContent = "Tap an emoji to see what’s happening";
+    detail.textContent = `${type.label} milestones wrap the ring.`;
+  }
+
+  updateRingEmojiSelectionStyles();
+  updateRingEmojiProgress(type);
+}
+
+function selectRingEmoji(type, milestone) {
+  ringEmojiSelectionKey = `${type.id}-${milestone.hour}`;
+  updateRingEmojiPanel(type, milestone);
+  updateRingEmojiSelectionStyles();
+}
+
+function updateRingEmojiPanel(type, milestone) {
+  const title = $("ring-emoji-title");
+  const detail = $("ring-emoji-detail");
+  if (!title || !detail) return;
+
+  if (!milestone) {
+    title.textContent = "Tap an emoji to see what’s happening";
+    detail.textContent = `${type.label} milestones wrap the ring.`;
+    return;
+  }
+
+  title.textContent = `Hour ${milestone.hour} · ${milestone.label}`;
+  detail.textContent = milestone.detail;
+}
+
+function updateRingEmojiSelectionStyles() {
+  const layer = $("ring-emoji-layer");
+  if (!layer) return;
+  layer.querySelectorAll(".ring-emoji-btn").forEach(btn => {
+    const key = `${btn.dataset.typeId}-${btn.dataset.hour}`;
+    if (key === ringEmojiSelectionKey) btn.classList.add("is-selected");
+    else btn.classList.remove("is-selected");
+  });
+}
+
+function updateRingEmojiProgress(type) {
+  const layer = $("ring-emoji-layer");
+  if (!layer) return;
+  const elapsedHours = state.activeFast
+    ? Math.max(0, (Date.now() - state.activeFast.startTimestamp) / 3600000)
+    : null;
+
+  layer.querySelectorAll(".ring-emoji-btn").forEach(btn => {
+    const hour = Number(btn.dataset.hour);
+    const isActive = elapsedHours !== null && elapsedHours >= hour;
+    if (isActive) btn.classList.add("is-active");
+    else btn.classList.remove("is-active");
+  });
+}
+
 function updateTimer() {
   const ring = $("progress-ring");
   const main = $("timer-main");
@@ -1602,6 +2029,7 @@ function updateTimer() {
   const typePill = $("timer-type");
 
   ring.setAttribute("stroke-dasharray", String(RING_CIRC));
+  ensureRingEmojis();
 
   const displayMode = state.settings.timeDisplayMode || "elapsed";
   const type = getActiveType();
