@@ -48,6 +48,7 @@ const NOTES_SCHEMA = Object.freeze({
 });
 
 let FAST_TYPES = [];
+let FASTING_HOURLY = { hours: [], notes: [] };
 
 const DEFAULT_THEME_ID = "midnight";
 const DEFAULT_THEME_COLORS = {
@@ -167,6 +168,13 @@ async function initApp() {
   }
 
   try {
+    FASTING_HOURLY = await loadFastingHourly();
+  } catch (err) {
+    console.error("Failed to load fasting-hourly.yaml:", err);
+    FASTING_HOURLY = { hours: [], notes: [] };
+  }
+
+  try {
     FAST_TYPES = await loadFastTypes();
   } catch (err) {
     console.error("Failed to load fast types:", err);
@@ -179,11 +187,12 @@ async function initApp() {
         id: defaultState.settings.defaultFastTypeId,
         label: "16:8",
         durationHours: 16,
-        bullets: [],
-        milestones: []
+        milestoneHours: []
       }
     ];
   }
+
+  FAST_TYPES = hydrateFastTypes(FAST_TYPES, FASTING_HOURLY);
 
   selectedFastTypeId = resolveFastTypeId(selectedFastTypeId);
   initAuthUI();
@@ -228,6 +237,86 @@ async function loadFastTypes() {
   const data = loadYaml(text);
   if (!Array.isArray(data)) throw new Error("fast-types.yaml is not a list");
   return data;
+}
+
+async function loadFastingHourly() {
+  const response = await fetch("./fasting-hourly.yaml", { cache: "no-store" });
+  if (!response.ok) throw new Error(`fasting-hourly.yaml request failed (${response.status})`);
+  const text = await response.text();
+  const data = loadYaml(text);
+  return normalizeFastingHourly(data);
+}
+
+function normalizeFastingHourly(data) {
+  const hours = Array.isArray(data?.hours) ? data.hours : (Array.isArray(data) ? data : []);
+  const notes = Array.isArray(data?.notes) ? data.notes.filter(note => typeof note === "string") : [];
+  const normalizedHours = hours
+    .filter(entry => entry && Number.isFinite(Number(entry.hour)))
+    .map(entry => ({
+      hour: Number(entry.hour),
+      emoji: typeof entry.emoji === "string" ? entry.emoji : "⏳",
+      label: typeof entry.label === "string" ? entry.label : `Hour ${entry.hour}`,
+      actions: Array.isArray(entry.actions) ? entry.actions.filter(action => typeof action === "string") : []
+    }))
+    .sort((a, b) => a.hour - b.hour);
+  return { hours: normalizedHours, notes };
+}
+
+function hydrateFastTypes(types, hourly) {
+  if (!Array.isArray(types)) return [];
+  return types.map(type => {
+    const milestoneHours = Array.isArray(type.milestoneHours) ? type.milestoneHours : [];
+    const milestones = buildMilestones(milestoneHours, hourly);
+    return { ...type, milestoneHours, milestones };
+  });
+}
+
+function getHourlyEntry(hour) {
+  const numericHour = Number(hour);
+  return FASTING_HOURLY.hours.find(entry => entry.hour === numericHour);
+}
+
+function formatHourlyAction(hour, action) {
+  return `${hour}h after eating: ${action}`;
+}
+
+function getHourlyActionDetail(hour, { random = false } = {}) {
+  const entry = getHourlyEntry(hour);
+  if (!entry) return null;
+  const actions = Array.isArray(entry.actions) ? entry.actions : [];
+  const action = random && actions.length
+    ? actions[Math.floor(Math.random() * actions.length)]
+    : actions[0];
+  if (!action) return null;
+  return formatHourlyAction(entry.hour, action);
+}
+
+function getTypeBullets(type) {
+  const hours = Array.isArray(type?.milestoneHours) ? type.milestoneHours : [];
+  const bullets = hours
+    .map(hour => getHourlyActionDetail(hour, { random: true }))
+    .filter(Boolean);
+  const notes = Array.isArray(FASTING_HOURLY?.notes) ? FASTING_HOURLY.notes : [];
+  notes.forEach(note => bullets.push(note));
+  return bullets;
+}
+
+function buildMilestones(hours, hourly) {
+  if (!Array.isArray(hours)) return [];
+  return hours
+    .map(hour => {
+      const entry = hourly.hours.find(item => item.hour === Number(hour));
+      if (!entry) return null;
+      const baseAction = Array.isArray(entry.actions) ? entry.actions[0] : null;
+      const detail = baseAction ? formatHourlyAction(entry.hour, baseAction) : `Hour ${entry.hour}`;
+      return {
+        hour: entry.hour,
+        emoji: entry.emoji,
+        label: entry.label,
+        detail
+      };
+    })
+    .filter(Boolean);
 }
 
 function resolveFastTypeId(typeId) {
@@ -1557,7 +1646,8 @@ function openFastTypeModal(type) {
   $("modal-type-duration").textContent = type.durationHours + " hours";
   const list = $("modal-bullets");
   list.innerHTML = "";
-  type.bullets.forEach(t => {
+  const bullets = getTypeBullets(type);
+  bullets.forEach(t => {
     const li = document.createElement("li");
     li.textContent = t;
     list.appendChild(li);
@@ -1974,20 +2064,7 @@ function selectRingEmoji(type, milestone) {
 }
 
 function getRandomMilestoneDetail(hour) {
-  const numericHour = Number(hour);
-  const tips = [];
-
-  FAST_TYPES.forEach(type => {
-    const milestones = Array.isArray(type?.milestones) ? type.milestones : [];
-    milestones.forEach(milestone => {
-      if (Number(milestone.hour) === numericHour && milestone.detail) {
-        tips.push(milestone.detail);
-      }
-    });
-  });
-
-  if (!tips.length) return null;
-  return tips[Math.floor(Math.random() * tips.length)];
+  return getHourlyActionDetail(hour, { random: true });
 }
 
 function updateRingEmojiPanel(type, milestone) {
