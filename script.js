@@ -1044,6 +1044,8 @@ function ensureNotesOverlay() {
   notesPortal.style.zIndex = "9999";
   notesPortal.style.display = "none";
   notesPortal.style.pointerEvents = "auto";
+  notesPortal.style.touchAction = "pan-y";
+  notesPortal.style.overscrollBehaviorX = "contain";
 
   notesBackdrop = document.createElement("div");
   notesBackdrop.id = "notes-backdrop";
@@ -1081,15 +1083,15 @@ function ensureNotesOverlay() {
     let swipeStartY = 0;
     let swipeTracking = false;
 
-    drawer.addEventListener("touchstart", (e) => {
+    notesPortal.addEventListener("touchstart", (e) => {
       if (!notesOverlayOpen || !e.touches || e.touches.length !== 1) return;
       const touch = e.touches[0];
       swipeStartX = touch.clientX;
       swipeStartY = touch.clientY;
       swipeTracking = true;
-    }, { passive: true });
+    }, { passive: true, capture: true });
 
-    drawer.addEventListener("touchmove", (e) => {
+    notesPortal.addEventListener("touchmove", (e) => {
       if (!swipeTracking || !e.touches || e.touches.length !== 1) return;
       const touch = e.touches[0];
       const deltaX = touch.clientX - swipeStartX;
@@ -1097,9 +1099,9 @@ function ensureNotesOverlay() {
       if (deltaY > 60 && deltaY > Math.abs(deltaX)) {
         swipeTracking = false;
       }
-    }, { passive: true });
+    }, { passive: true, capture: true });
 
-    drawer.addEventListener("touchend", (e) => {
+    notesPortal.addEventListener("touchend", (e) => {
       if (!swipeTracking || !notesOverlayOpen) return;
       const touch = e.changedTouches && e.changedTouches[0];
       if (!touch) return;
@@ -1109,7 +1111,7 @@ function ensureNotesOverlay() {
         closeNotesDrawer();
       }
       swipeTracking = false;
-    }, { passive: true });
+    }, { passive: true, capture: true });
   }
 
   notesBackdrop.addEventListener("click", () => closeNotesDrawer());
