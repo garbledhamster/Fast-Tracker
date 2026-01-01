@@ -1402,6 +1402,8 @@ function initButtons() {
   $("edit-start-save").addEventListener("click", saveEditedStartTime);
 
   $("new-note-btn").addEventListener("click", () => openNoteEditor());
+  const noteEditorBackdrop = document.querySelector("#note-editor-modal .note-editor-backdrop");
+  if (noteEditorBackdrop) noteEditorBackdrop.addEventListener("click", closeNoteEditor);
   $("note-editor-close").addEventListener("click", closeNoteEditor);
   $("note-editor-save").addEventListener("click", saveNoteEditor);
   $("note-editor-delete").addEventListener("click", removeNote);
