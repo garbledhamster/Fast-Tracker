@@ -201,7 +201,7 @@ let needsUnlock = false;
 let authRememberChoice = null;
 let stateUnsubscribe = null;
 let notesUnsubscribe = null;
-let notesDrawerCloseTimeout = null; // ✅ FIX: declared (was referenced but not defined)
+let notesDrawerCloseTimeout = null;
 let notesLoaded = false;
 let notes = [];
 let noteEditorCloseTimeout = null;
@@ -214,6 +214,14 @@ let editingNoteOpenedAt = null;
 let navHoldTimer = null;
 let navHoldShown = false;
 let suppressNavClickEl = null;
+
+// ✅ NEW: Notes overlay state (opens above other tabs)
+let currentTab = "timer";
+let lastNonNotesTab = "timer";
+let notesOverlayOpen = false;
+let notesPortal = null;
+let notesBackdrop = null;
+let bodyOverflowBeforeNotes = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initAuthUI();
@@ -270,9 +278,7 @@ async function normalizeNoteSnapshot(snap) {
     try {
       text = await decryptNotePayload(data.payload);
     } catch (err) {
-      if (err?.message === "missing-key") {
-        throw err;
-      }
+      if (err?.message === "missing-key") throw err;
       throw new Error("decrypt-failed");
     }
   } else if (typeof data.text === "string") {
@@ -290,9 +296,7 @@ async function normalizeNoteSnapshot(snap) {
 }
 
 function normalizeFastContext(fastContext, createdAt) {
-  if (!fastContext || typeof fastContext !== "object") {
-    return buildInactiveFastContext();
-  }
+  if (!fastContext || typeof fastContext !== "object") return buildInactiveFastContext();
 
   const legacyTypeId = typeof fastContext.typeId === "string" ? fastContext.typeId : null;
   const legacyTypeLabel = typeof fastContext.typeLabel === "string" ? fastContext.typeLabel : null;
@@ -332,9 +336,7 @@ function buildInactiveFastContext() {
 }
 
 function buildFastContextAt(timestampMs) {
-  if (!state.activeFast) {
-    return buildInactiveFastContext();
-  }
+  if (!state.activeFast) return buildInactiveFastContext();
   const type = getTypeById(state.activeFast.typeId);
   const elapsedMsAtNote = typeof state.activeFast.startTimestamp === "number"
     ? Math.max(0, (timestampMs ?? Date.now()) - state.activeFast.startTimestamp)
@@ -367,9 +369,7 @@ async function buildNotePayload({ text, dateKey, fastContext } = {}) {
 }
 
 async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt } = {}) {
-  const payload = {
-    updatedAt: Date.now()
-  };
+  const payload = { updatedAt: Date.now() };
   if (typeof text === "string") payload.payload = await encryptNotePayload(text.trim());
   if (typeof dateKey === "string") payload.dateKey = dateKey;
   if (fastContext !== undefined) {
@@ -385,9 +385,7 @@ async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt } 
         ["plannedDurationHours", fastContext.plannedDurationHours]
       ];
       fields.forEach(([key, value]) => {
-        if (value !== undefined) {
-          payload[`fastContext.${key}`] = value;
-        }
+        if (value !== undefined) payload[`fastContext.${key}`] = value;
       });
       if (Object.prototype.hasOwnProperty.call(fastContext, "elapsedMsAtNote")) {
         payload["fastContext.elapsedMsAtNote"] = fastContext.elapsedMsAtNote ?? null;
@@ -533,7 +531,7 @@ function startNotesListener(uid) {
   stopNotesListener();
   notesLoaded = false;
   notes = [];
-  renderNotes(); // ✅ FIX: make UI show "Loading…" immediately
+  renderNotes();
 
   notesUnsubscribe = onSnapshot(
     getNotesCollectionRef(uid),
@@ -548,7 +546,6 @@ function startNotesListener(uid) {
       }
     },
     (err) => {
-      // ✅ FIX: without this, permission/AppCheck errors = "Loading notes…" forever
       console.error("Notes listener failed:", err);
       notesLoaded = true;
       notes = [];
@@ -788,9 +785,7 @@ async function encryptNotePayload(text) {
 
 async function decryptNotePayload(payload) {
   if (!cryptoKey) throw new Error("missing-key");
-  if (!payload?.iv || !payload?.ciphertext) {
-    throw new Error("invalid-payload");
-  }
+  if (!payload?.iv || !payload?.ciphertext) throw new Error("invalid-payload");
   const iv = decodeBase64(payload.iv);
   const ciphertext = decodeBase64(payload.ciphertext);
   const decryptedBuffer = await crypto.subtle.decrypt(
@@ -802,9 +797,7 @@ async function decryptNotePayload(payload) {
 }
 
 function handleNotesDecryptError(err) {
-  const message = err?.message === "missing-key"
-    ? "missing-password"
-    : err?.message;
+  const message = err?.message === "missing-key" ? "missing-password" : err?.message;
   if (message === "missing-password" || message === "decrypt-failed") {
     cryptoKey = null;
     keySalt = null;
@@ -815,9 +808,7 @@ function handleNotesDecryptError(err) {
 async function resolveEncryptedPayload(uid) {
   try {
     const snap = await getDoc(getStateDocRef(uid));
-    if (snap.exists()) {
-      return snap.data()?.payload || null;
-    }
+    if (snap.exists()) return snap.data()?.payload || null;
   } catch {}
   return getEncryptedCache();
 }
@@ -831,16 +822,12 @@ async function resolveUserSalt(uid, payloadSalt) {
 
   if (!storedSalt && payloadSalt) {
     storedSalt = payloadSalt;
-    try {
-      await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true });
-    } catch {}
+    try { await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true }); } catch {}
   }
 
   if (!storedSalt) {
     storedSalt = encodeBase64(crypto.getRandomValues(new Uint8Array(16)));
-    try {
-      await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true });
-    } catch {}
+    try { await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true }); } catch {}
   }
 
   return decodeBase64(storedSalt);
@@ -862,19 +849,14 @@ async function loadState() {
         if (authRememberChoice) await wrapEncryptionKeyForDevice(user.uid);
       } else {
         const cachedKey = await unwrapEncryptionKeyFromDevice(user.uid);
-        if (cachedKey) {
-          cryptoKey = cachedKey;
-        } else {
-          throw new Error("missing-password");
-        }
+        if (cachedKey) cryptoKey = cachedKey;
+        else throw new Error("missing-password");
       }
     }
     return clone(defaultState);
   }
 
-  if (!payload.iv || !payload.ciphertext) {
-    throw new Error("invalid-payload");
-  }
+  if (!payload.iv || !payload.ciphertext) throw new Error("invalid-payload");
 
   if (!cryptoKey) {
     if (pendingPassword) {
@@ -883,11 +865,8 @@ async function loadState() {
       if (authRememberChoice) await wrapEncryptionKeyForDevice(user.uid);
     } else {
       const cachedKey = await unwrapEncryptionKeyFromDevice(user.uid);
-      if (cachedKey) {
-        cryptoKey = cachedKey;
-      } else {
-        throw new Error("missing-password");
-      }
+      if (cachedKey) cryptoKey = cachedKey;
+      else throw new Error("missing-password");
     }
   }
 
@@ -908,10 +887,7 @@ async function saveState() {
   const payload = await encryptStatePayload();
   payload.salt = encodeBase64(keySalt);
 
-  try {
-    await setDoc(getStateDocRef(user.uid), { payload }, { merge: true });
-  } catch {}
-
+  try { await setDoc(getStateDocRef(user.uid), { payload }, { merge: true }); } catch {}
   setEncryptedCache(payload);
 }
 
@@ -949,6 +925,7 @@ function initAuthListener() {
       pendingPassword = null;
       needsUnlock = false;
       authRememberChoice = null;
+      closeNotesDrawer(true);
     }
   });
 }
@@ -956,13 +933,11 @@ function initAuthListener() {
 function initAuthUI() {
   const form = $("auth-form");
   const toggle = $("auth-toggle");
-
   form.addEventListener("submit", handleAuthSubmit);
   toggle.addEventListener("click", () => {
     authMode = authMode === "sign-in" ? "sign-up" : "sign-in";
     updateAuthMode();
   });
-
   updateAuthMode();
 }
 
@@ -982,9 +957,7 @@ function updateAuthMode() {
 function showReauthPrompt(message) {
   authMode = "sign-in";
   updateAuthMode();
-  if (auth.currentUser?.email) {
-    $("auth-email").value = auth.currentUser.email;
-  }
+  if (auth.currentUser?.email) $("auth-email").value = auth.currentUser.email;
   $("auth-password").value = "";
   const errorEl = $("auth-error");
   errorEl.textContent = message;
@@ -1016,16 +989,13 @@ async function handleAuthSubmit(e) {
 
   try {
     await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-    if (authMode === "sign-up") {
-      await createUserWithEmailAndPassword(auth, email, password);
-    } else {
-      await signInWithEmailAndPassword(auth, email, password);
-    }
+    if (authMode === "sign-up") await createUserWithEmailAndPassword(auth, email, password);
+    else await signInWithEmailAndPassword(auth, email, password);
+
     pendingPassword = password;
     authRememberChoice = remember;
-    if (auth.currentUser && !remember) {
-      clearWrappedKeyStorage(auth.currentUser.uid);
-    }
+    if (auth.currentUser && !remember) clearWrappedKeyStorage(auth.currentUser.uid);
+
     if (needsUnlock && auth.currentUser) {
       try {
         await completeAuthFlow();
@@ -1067,6 +1037,127 @@ async function loadAppState() {
   selectedDayKey = formatDateKey(new Date());
 }
 
+// ✅ NEW: Ensure Notes drawer is an overlay (fixed, above tabs) and closes on outside click
+function ensureNotesOverlay() {
+  if (notesPortal) return;
+
+  const drawer = $("tab-notes");
+  if (!drawer) return;
+
+  notesPortal = document.createElement("div");
+  notesPortal.id = "notes-portal";
+  notesPortal.style.position = "fixed";
+  notesPortal.style.inset = "0";
+  notesPortal.style.zIndex = "9999";
+  notesPortal.style.display = "none";
+  notesPortal.style.pointerEvents = "auto";
+
+  notesBackdrop = document.createElement("div");
+  notesBackdrop.id = "notes-backdrop";
+  notesBackdrop.style.position = "absolute";
+  notesBackdrop.style.inset = "0";
+  notesBackdrop.style.background = "rgba(0,0,0,0.55)";
+  notesBackdrop.style.backdropFilter = "blur(2px)";
+  notesBackdrop.style.webkitBackdropFilter = "blur(2px)";
+
+  notesPortal.appendChild(notesBackdrop);
+
+  // Move drawer into portal so it can sit above everything
+  notesPortal.appendChild(drawer);
+
+  // Make the drawer behave like a right-side sheet on desktop, full width on mobile
+  drawer.style.position = "absolute";
+  drawer.style.top = "0";
+  drawer.style.right = "0";
+  drawer.style.bottom = "0";
+  drawer.style.left = "auto";
+  drawer.style.width = "min(520px, 100vw)";
+  drawer.style.maxWidth = "100vw";
+  drawer.style.height = "100%";
+  drawer.style.overflow = "auto";
+  drawer.style.zIndex = "10000";
+
+  // Prevent clicks inside the drawer from closing it via backdrop
+  drawer.addEventListener("mousedown", (e) => e.stopPropagation());
+  drawer.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
+  drawer.addEventListener("click", (e) => e.stopPropagation());
+
+  notesBackdrop.addEventListener("click", () => closeNotesDrawer());
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && notesOverlayOpen) closeNotesDrawer();
+  });
+
+  document.body.appendChild(notesPortal);
+}
+
+function setNotesNavActive(on) {
+  const notesBtn = document.querySelector('nav .nav-btn[data-tab="notes"]');
+  if (!notesBtn) return;
+  notesBtn.classList.toggle("nav-btn-active", !!on);
+  notesBtn.classList.toggle("text-slate-100", !!on);
+  notesBtn.classList.toggle("text-slate-500", !on);
+}
+
+function openNotesDrawer() {
+  ensureNotesOverlay();
+  const drawer = $("tab-notes");
+  if (!drawer || !notesPortal) return;
+
+  if (notesDrawerCloseTimeout) {
+    clearTimeout(notesDrawerCloseTimeout);
+    notesDrawerCloseTimeout = null;
+  }
+
+  if (bodyOverflowBeforeNotes === null) bodyOverflowBeforeNotes = document.body.style.overflow || "";
+  document.body.style.overflow = "hidden";
+
+  notesPortal.style.display = "block";
+  drawer.classList.remove("hidden");
+  requestAnimationFrame(() => drawer.classList.add("is-open"));
+
+  notesOverlayOpen = true;
+  setNotesNavActive(true);
+  renderNotes();
+}
+
+function closeNotesDrawer(forceImmediate = false) {
+  const drawer = $("tab-notes");
+  if (!drawer || !notesPortal) {
+    notesOverlayOpen = false;
+    setNotesNavActive(false);
+    if (bodyOverflowBeforeNotes !== null) {
+      document.body.style.overflow = bodyOverflowBeforeNotes;
+      bodyOverflowBeforeNotes = null;
+    }
+    return;
+  }
+
+  notesOverlayOpen = false;
+  setNotesNavActive(false);
+
+  drawer.classList.remove("is-open");
+
+  if (forceImmediate) {
+    drawer.classList.add("hidden");
+    notesPortal.style.display = "none";
+    if (bodyOverflowBeforeNotes !== null) {
+      document.body.style.overflow = bodyOverflowBeforeNotes;
+      bodyOverflowBeforeNotes = null;
+    }
+    return;
+  }
+
+  if (notesDrawerCloseTimeout) clearTimeout(notesDrawerCloseTimeout);
+  notesDrawerCloseTimeout = setTimeout(() => {
+    drawer.classList.add("hidden");
+    notesPortal.style.display = "none";
+    if (bodyOverflowBeforeNotes !== null) {
+      document.body.style.overflow = bodyOverflowBeforeNotes;
+      bodyOverflowBeforeNotes = null;
+    }
+  }, 220);
+}
+
 function initTabs() {
   document.querySelectorAll("nav .nav-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
@@ -1076,13 +1167,30 @@ function initTabs() {
         e.stopPropagation();
         return;
       }
-      switchTab(btn.dataset.tab);
+
+      const tab = btn.dataset.tab;
+
+      // ✅ Notes is now an overlay, not a real tab switch
+      if (tab === "notes") {
+        if (notesOverlayOpen) closeNotesDrawer();
+        else openNotesDrawer();
+        return;
+      }
+
+      // Switching tabs should close notes overlay if open
+      if (notesOverlayOpen) closeNotesDrawer();
+
+      switchTab(tab);
     });
   });
+
   switchTab("timer");
 }
 
 function switchTab(tab) {
+  currentTab = tab;
+  if (tab !== "notes") lastNonNotesTab = tab;
+
   ["timer", "history", "settings"].forEach(id => {
     const section = $("tab-" + id);
     const btn = document.querySelector(`nav .nav-btn[data-tab="${id}"]`);
@@ -1092,45 +1200,16 @@ function switchTab(tab) {
     btn.classList.toggle("text-slate-100", active);
     btn.classList.toggle("text-slate-500", !active);
   });
-  const notesBtn = document.querySelector('nav .nav-btn[data-tab="notes"]');
-  const notesActive = tab === "notes";
-  notesBtn.classList.toggle("nav-btn-active", notesActive);
-  notesBtn.classList.toggle("text-slate-100", notesActive);
-  notesBtn.classList.toggle("text-slate-500", !notesActive);
-  if (notesActive) {
-    openNotesDrawer();
-  } else {
-    closeNotesDrawer();
-  }
+
+  setNotesNavActive(false);
+
   if (tab === "history") {
     renderCalendar();
     renderDayDetails();
     renderRecentFasts();
     renderNotes();
   }
-  if (tab === "notes") renderNotes();
   if (tab === "settings") renderSettings();
-}
-
-function openNotesDrawer() {
-  const drawer = $("tab-notes");
-  if (!drawer) return;
-  if (notesDrawerCloseTimeout) {
-    clearTimeout(notesDrawerCloseTimeout);
-    notesDrawerCloseTimeout = null;
-  }
-  drawer.classList.remove("hidden");
-  requestAnimationFrame(() => drawer.classList.add("is-open"));
-}
-
-function closeNotesDrawer() {
-  const drawer = $("tab-notes");
-  if (!drawer || drawer.classList.contains("hidden")) return;
-  drawer.classList.remove("is-open");
-  if (notesDrawerCloseTimeout) clearTimeout(notesDrawerCloseTimeout);
-  notesDrawerCloseTimeout = setTimeout(() => {
-    drawer.classList.add("hidden");
-  }, 250);
 }
 
 function initNavTooltips() {
@@ -1854,11 +1933,7 @@ function renderHistoryNotes() {
   }
 
   summary.textContent = `${dayNotes.length} note(s)`;
-
-  dayNotes.forEach(note => {
-    const card = buildNoteCard(note);
-    list.appendChild(card);
-  });
+  dayNotes.forEach(note => list.appendChild(buildNoteCard(note)));
 }
 
 function renderNotesTab() {
@@ -1885,11 +1960,7 @@ function renderNotesTab() {
   }
 
   empty.classList.add("hidden");
-
-  notes.forEach(note => {
-    const card = buildNoteCard(note);
-    list.appendChild(card);
-  });
+  notes.forEach(note => list.appendChild(buildNoteCard(note)));
 }
 
 function buildNoteCard(note) {
@@ -1932,9 +2003,7 @@ function buildNoteCard(note) {
 
 function getNoteTimestampLabel(note) {
   const dateObj = parseDateKey(note.dateKey);
-  if (dateObj) {
-    return dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-  }
+  if (dateObj) return dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   return "Unknown date";
 }
 
@@ -2005,9 +2074,7 @@ function formatElapsedShort(ms) {
   const totalMinutes = Math.max(0, Math.floor(ms / 60000));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  if (hours <= 0) {
-    return `${minutes}m`;
-  }
+  if (hours <= 0) return `${minutes}m`;
   return `${hours}h ${minutes}m`;
 }
 
