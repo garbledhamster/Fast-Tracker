@@ -892,6 +892,77 @@ function mergeStateWithDefaults(parsed) {
   return merged;
 }
 
+function normalizeHistoryEntries(entries = []) {
+  const mergedEntries = [];
+  const entriesById = new Map();
+  let changed = false;
+
+  entries.forEach(entry => {
+    if (!entry || typeof entry !== "object") return;
+
+    const normalized = { ...entry };
+    const startTs = Number(normalized.startTimestamp);
+    const endTs = Number(normalized.endTimestamp);
+    const durationHours = computeDurationHours(startTs, endTs);
+
+    if (durationHours !== null && normalized.durationHours !== durationHours) {
+      normalized.durationHours = durationHours;
+      changed = true;
+    }
+
+    if (normalized.id) {
+      const existing = entriesById.get(normalized.id);
+      if (existing) {
+        const mergedStart = mergeTimestamp(existing.startTimestamp, startTs, Math.min);
+        const mergedEnd = mergeTimestamp(existing.endTimestamp, endTs, Math.max);
+        if (mergedStart !== existing.startTimestamp) {
+          existing.startTimestamp = mergedStart;
+          changed = true;
+        }
+        if (mergedEnd !== existing.endTimestamp) {
+          existing.endTimestamp = mergedEnd;
+          changed = true;
+        }
+        if (!existing.typeId && normalized.typeId) {
+          existing.typeId = normalized.typeId;
+          changed = true;
+        }
+        if (!existing.status && normalized.status) {
+          existing.status = normalized.status;
+          changed = true;
+        }
+        const mergedDuration = computeDurationHours(existing.startTimestamp, existing.endTimestamp);
+        if (mergedDuration !== null && existing.durationHours !== mergedDuration) {
+          existing.durationHours = mergedDuration;
+          changed = true;
+        }
+      } else {
+        entriesById.set(normalized.id, normalized);
+        mergedEntries.push(normalized);
+      }
+      return;
+    }
+
+    mergedEntries.push(normalized);
+  });
+
+  return { entries: mergedEntries, changed };
+}
+
+function mergeTimestamp(existing, incoming, picker) {
+  const hasExisting = isFinite(existing);
+  const hasIncoming = isFinite(incoming);
+  if (hasExisting && hasIncoming) return picker(existing, incoming);
+  if (hasIncoming) return incoming;
+  if (hasExisting) return existing;
+  return existing;
+}
+
+function computeDurationHours(startTs, endTs) {
+  if (!isFinite(startTs) || !isFinite(endTs) || endTs <= startTs) return null;
+  return Math.round(((endTs - startTs) / 3600000) * 100) / 100;
+}
+
 async function deriveKeyFromPassword(password, saltBytes) {
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
@@ -1321,6 +1392,11 @@ async function completeAuthFlow() {
 
 async function loadAppState() {
   state = await loadState();
+  const normalizedHistory = normalizeHistoryEntries(state.history);
+  if (normalizedHistory.changed) {
+    state.history = normalizedHistory.entries;
+    void saveState();
+  }
   selectedFastTypeId = resolveFastTypeId(state.settings.defaultFastTypeId);
   pendingTypeId = null;
   calendarMonth = startOfMonth(new Date());
@@ -2584,18 +2660,18 @@ function renderCalendar() {
 function buildDayFastMap({ includeActive = false } = {}) {
   const map = {};
 
-  const addSegment = (segment, segmentStart, segmentEnd) => {
-    const dayKey = formatDateKey(new Date(segmentStart));
+  const addEntryForDay = (entry, startTs, endTs, dayKey) => {
     if (!map[dayKey]) map[dayKey] = { entries: [], totalHours: 0 };
-    const hours = Math.max(0, (segmentEnd - segmentStart) / 3600000);
-    if (!hours) return;
+    const durationHours = computeDurationHours(startTs, endTs) ?? 0;
+    if (!durationHours) return;
     map[dayKey].entries.push({
-      ...segment,
-      durationHours: Math.round(hours * 100) / 100,
-      displayStartTimestamp: segmentStart,
-      displayEndTimestamp: segmentEnd
+      ...entry,
+      durationHours,
+      displayStartTimestamp: startTs,
+      displayEndTimestamp: endTs,
+      sourceEntry: entry
     });
-    map[dayKey].totalHours += hours;
+    map[dayKey].totalHours += durationHours;
   };
 
   const addEntryAcrossDays = (entry, startTs, endTs) => {
@@ -2606,16 +2682,9 @@ function buildDayFastMap({ includeActive = false } = {}) {
     const endDayStart = new Date(endDay.getFullYear(), endDay.getMonth(), endDay.getDate());
 
     while (cursor <= endDayStart) {
-      const dayStart = cursor.getTime();
-      const nextDay = new Date(cursor);
-      nextDay.setDate(nextDay.getDate() + 1);
-      const dayEnd = nextDay.getTime();
-      const segmentStart = Math.max(startTs, dayStart);
-      const segmentEnd = Math.min(endTs, dayEnd);
-      if (segmentEnd > segmentStart) {
-        addSegment({ ...entry, sourceEntry: entry }, segmentStart, segmentEnd);
-      }
-      cursor = nextDay;
+      const dayKey = formatDateKey(cursor);
+      addEntryForDay(entry, startTs, endTs, dayKey);
+      cursor.setDate(cursor.getDate() + 1);
     }
   };
 
