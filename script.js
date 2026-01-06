@@ -2682,8 +2682,13 @@ function buildDayFastMap({ includeActive = false } = {}) {
     const endDayStart = new Date(endDay.getFullYear(), endDay.getMonth(), endDay.getDate());
 
     while (cursor <= endDayStart) {
+      const dayStart = new Date(cursor);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      const displayStart = Math.max(startTs, dayStart.getTime());
+      const displayEnd = Math.min(endTs, dayEnd.getTime());
       const dayKey = formatDateKey(cursor);
-      addEntryForDay(entry, startTs, endTs, dayKey);
+      addEntryForDay(entry, displayStart, displayEnd, dayKey);
       cursor.setDate(cursor.getDate() + 1);
     }
   };
