@@ -2722,10 +2722,9 @@ function renderDayDetails() {
     const displayStart = e.displayStartTimestamp ?? e.startTimestamp;
     const displayEnd = e.displayEndTimestamp ?? e.endTimestamp;
     const sourceEntry = e.sourceEntry ?? e;
-    const spansMultipleDays = !isSameLocalDay(
-      new Date(sourceEntry.startTimestamp),
-      new Date(sourceEntry.endTimestamp)
-    );
+    const actualStart = new Date(sourceEntry.startTimestamp);
+    const actualEnd = new Date(sourceEntry.endTimestamp);
+    const spansMultipleDays = !isSameLocalDay(actualStart, actualEnd);
     const row = document.createElement("div");
     row.className = "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
 
@@ -2743,7 +2742,7 @@ function renderDayDetails() {
     const time = document.createElement("div");
     time.className = "text-muted";
     const timeLabel = spansMultipleDays
-      ? `${formatDateTimeLong(new Date(displayStart))} → ${formatDateTimeLong(new Date(displayEnd))}`
+      ? `${formatDateTimeLong(actualStart)} → ${formatDateTimeLong(new Date(displayEnd))}`
       : `${formatTimeShort(new Date(displayStart))} → ${formatTimeShort(new Date(displayEnd))}`;
     time.textContent = e.isActive ? `${timeLabel} (in progress)` : timeLabel;
 
