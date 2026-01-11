@@ -1,0 +1,45 @@
+- id: lose
+  label: Lose weight
+  tips:
+    - emoji: "🥗"
+      title: "Volume first"
+      detail: "Load half your plate with vegetables to stay satisfied on fewer calories."
+    - emoji: "💧"
+      title: "Hydrate before meals"
+      detail: "Drink a glass of water 10–15 minutes before eating to curb snacking."
+    - emoji: "🍓"
+      title: "Smart snacks"
+      detail: "Choose fruit, yogurt, or nuts instead of sugary snacks."
+    - emoji: "🧂"
+      title: "Watch sodium"
+      detail: "Lower sodium foods can reduce water retention and bloating."
+- id: maintain
+  label: Maintain
+  tips:
+    - emoji: "⚖️"
+      title: "Balance the plate"
+      detail: "Aim for protein, fiber-rich carbs, and healthy fats at each meal."
+    - emoji: "🕒"
+      title: "Consistent timing"
+      detail: "Eat at similar times each day to keep hunger cues steady."
+    - emoji: "🥤"
+      title: "Mindful drinks"
+      detail: "Keep liquid calories in check by choosing water or unsweetened tea."
+    - emoji: "📓"
+      title: "Track patterns"
+      detail: "Note energy levels and cravings to adjust portions as needed."
+- id: gain
+  label: Gain muscle
+  tips:
+    - emoji: "🍗"
+      title: "Protein at every meal"
+      detail: "Include a solid protein source to support muscle growth."
+    - emoji: "🥑"
+      title: "Add healthy fats"
+      detail: "Avocado, olive oil, or nut butters boost calories without huge volume."
+    - emoji: "🍚"
+      title: "Carb support"
+      detail: "Pair training days with extra carbs for recovery and energy."
+    - emoji: "🧃"
+      title: "Easy calorie boost"
+      detail: "Smoothies are a quick way to add calories and nutrients."

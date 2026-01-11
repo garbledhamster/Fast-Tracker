@@ -59,6 +59,7 @@ const NOTES_SCHEMA = Object.freeze({
 
 let FAST_TYPES = [];
 let FASTING_HOURLY = { hours: [], notes: [] };
+let CALORIE_TIPS = { goals: [], map: {} };
 
 const DEFAULT_THEME_ID = "midnight";
 const DEFAULT_THEME_COLORS = {
@@ -167,6 +168,9 @@ let ringEmojiTypeId = null;
 let ringEmojiSelectionKey = null;
 let ringEmojiSelectionDetail = null;
 let ringEmojiLayoutSize = 0;
+let calorieTipGoalId = null;
+let calorieTipSelectionKey = null;
+let calorieTipLayoutSize = 0;
 let notesOverlayOpen = false;
 let notesPortal = null;
 let notesBackdrop = null;
@@ -208,6 +212,13 @@ async function initApp() {
   } catch (err) {
     console.error("Failed to load fast types:", err);
     FAST_TYPES = [];
+  }
+
+  try {
+    CALORIE_TIPS = await loadCalorieTips();
+  } catch (err) {
+    console.error("Failed to load calorie-tips.yaml:", err);
+    CALORIE_TIPS = { goals: [], map: {} };
   }
 
   if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) {
@@ -276,6 +287,14 @@ async function loadFastingHourly() {
   return normalizeFastingHourly(data);
 }
 
+async function loadCalorieTips() {
+  const response = await fetch("./calorie-tips.yaml", { cache: "no-store" });
+  if (!response.ok) throw new Error(`calorie-tips.yaml request failed (${response.status})`);
+  const text = await response.text();
+  const data = loadYaml(text);
+  return normalizeCalorieTips(data);
+}
+
 function normalizeFastingHourly(data) {
   const hours = Array.isArray(data?.hours) ? data.hours : (Array.isArray(data) ? data : []);
   const notes = Array.isArray(data?.notes) ? data.notes.filter(note => typeof note === "string") : [];
@@ -289,6 +308,36 @@ function normalizeFastingHourly(data) {
     }))
     .sort((a, b) => a.hour - b.hour);
   return { hours: normalizedHours, notes };
+}
+
+function normalizeCalorieTips(data) {
+  const goals = Array.isArray(data?.goals) ? data.goals : (Array.isArray(data) ? data : []);
+  const normalizedGoals = goals
+    .map(goal => {
+      const id = typeof goal?.id === "string" ? goal.id.trim() : "";
+      if (!id) return null;
+      const tips = Array.isArray(goal?.tips)
+        ? goal.tips
+          .filter(tip => tip && typeof tip === "object")
+          .map(tip => ({
+            emoji: typeof tip.emoji === "string" ? tip.emoji : "✨",
+            title: typeof tip.title === "string" ? tip.title : "Quick tip",
+            detail: typeof tip.detail === "string" ? tip.detail : ""
+          }))
+          .filter(tip => tip.title || tip.detail)
+        : [];
+      return {
+        id,
+        label: typeof goal?.label === "string" ? goal.label : id,
+        tips
+      };
+    })
+    .filter(Boolean);
+  const map = normalizedGoals.reduce((acc, goal) => {
+    acc[goal.id] = goal;
+    return acc;
+  }, {});
+  return { goals: normalizedGoals, map };
 }
 
 function hydrateFastTypes(types, hourly) {
@@ -1910,6 +1959,125 @@ function renderCalorieRing() {
 
   if (panelTitle) panelTitle.textContent = panelTitleText;
   if (panelDetail) panelDetail.textContent = panelDetailText;
+
+  renderCalorieTipOrbs();
+}
+
+function getCalorieTipBucket() {
+  const goalId = String(getCalorieSettings().goal || "").trim();
+  if (!goalId) return null;
+  return CALORIE_TIPS.map[goalId] || null;
+}
+
+function renderCalorieTipOrbs() {
+  const layer = $("calorie-ring-emoji-layer");
+  const panelTitle = $("calorie-tip-title");
+  const panelDetail = $("calorie-tip-detail");
+  if (!layer) return;
+
+  const goalId = String(getCalorieSettings().goal || "").trim();
+  const bucket = getCalorieTipBucket();
+  const size = layer.clientWidth;
+
+  if (!goalId || !bucket || bucket.tips.length === 0 || !size) {
+    layer.innerHTML = "";
+    calorieTipGoalId = goalId;
+    calorieTipLayoutSize = size;
+    calorieTipSelectionKey = null;
+    if (panelTitle) panelTitle.textContent = goalId ? "No tips yet" : "Select a goal to see calorie tips";
+    if (panelDetail) panelDetail.textContent = goalId ? "Add tips for this goal in calorie-tips.yaml." : "";
+    return;
+  }
+
+  const shouldRender = !layer.childElementCount
+    || calorieTipGoalId !== goalId
+    || calorieTipLayoutSize !== size;
+
+  if (shouldRender) {
+    renderCalorieTipLayout(bucket, size, goalId);
+  } else {
+    updateCalorieTipSelectionStyles();
+  }
+}
+
+function renderCalorieTipLayout(bucket, size, goalId) {
+  const layer = $("calorie-ring-emoji-layer");
+  const panelTitle = $("calorie-tip-title");
+  const panelDetail = $("calorie-tip-detail");
+  if (!layer || !panelTitle || !panelDetail) return;
+
+  calorieTipGoalId = goalId;
+  calorieTipLayoutSize = size;
+  layer.innerHTML = "";
+
+  const tips = bucket.tips;
+  const radius = Math.max(size / 2 - 18, 0);
+  const center = size / 2;
+  const step = 360 / tips.length;
+
+  tips.forEach((tip, index) => {
+    const angle = step * index - 90;
+    const rad = angle * (Math.PI / 180);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ring-emoji-btn";
+    btn.textContent = tip.emoji;
+    btn.style.left = `${center + Math.cos(rad) * radius}px`;
+    btn.style.top = `${center + Math.sin(rad) * radius}px`;
+    btn.dataset.tipKey = `${goalId}-${index}`;
+    btn.addEventListener("click", () => selectCalorieTip(goalId, index, tip));
+    layer.appendChild(btn);
+  });
+
+  const hasSelection = tips.some((_, index) => `${goalId}-${index}` === calorieTipSelectionKey);
+  if (!hasSelection) {
+    calorieTipSelectionKey = null;
+  }
+
+  if (calorieTipSelectionKey) {
+    const index = Number(calorieTipSelectionKey.split("-")[1]);
+    const selectedTip = tips[index];
+    if (selectedTip) {
+      updateCalorieTipPanel(bucket, selectedTip);
+    } else {
+      updateCalorieTipPanel(bucket, null);
+    }
+  } else {
+    updateCalorieTipPanel(bucket, null);
+  }
+
+  updateCalorieTipSelectionStyles();
+}
+
+function selectCalorieTip(goalId, index, tip) {
+  calorieTipSelectionKey = `${goalId}-${index}`;
+  updateCalorieTipPanel(getCalorieTipBucket(), tip);
+  updateCalorieTipSelectionStyles();
+}
+
+function updateCalorieTipPanel(bucket, tip) {
+  const panelTitle = $("calorie-tip-title");
+  const panelDetail = $("calorie-tip-detail");
+  if (!panelTitle || !panelDetail) return;
+
+  if (!bucket || !tip) {
+    panelTitle.textContent = "Tap a calorie orb for a tip";
+    panelDetail.textContent = bucket ? `${bucket.label} tips wrap the ring.` : "";
+    return;
+  }
+
+  panelTitle.textContent = tip.title;
+  panelDetail.textContent = tip.detail;
+}
+
+function updateCalorieTipSelectionStyles() {
+  const layer = $("calorie-ring-emoji-layer");
+  if (!layer) return;
+  layer.querySelectorAll(".ring-emoji-btn").forEach(btn => {
+    const key = btn.dataset.tipKey;
+    if (key === calorieTipSelectionKey) btn.classList.add("is-selected");
+    else btn.classList.remove("is-selected");
+  });
 }
 
 function renderFastButton() {
