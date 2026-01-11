@@ -116,6 +116,7 @@ const defaultState = {
       currentWeight: null,
       gender: "",
       fitnessLevel: "",
+      unitSystem: "metric",
       target: null,
       consumed: 0,
       view: "total"
@@ -1958,6 +1959,11 @@ function getCalorieSettings() {
   return state.settings.calories;
 }
 
+function getCalorieUnitSystem() {
+  const unitSystem = getCalorieSettings().unitSystem;
+  return unitSystem === "imperial" ? "imperial" : "metric";
+}
+
 function parseCalorieValue(value) {
   const trimmed = String(value ?? "").trim();
   if (!trimmed) return null;
@@ -2247,7 +2253,12 @@ function renderCalories() {
   const ageInput = $("calorie-age-input");
   const heightInput = $("calorie-height-input");
   const weightInput = $("calorie-weight-input");
+  const heightLabel = $("calorie-height-label");
+  const weightLabel = $("calorie-weight-label");
+  const heightSubtext = $("calorie-height-subtext");
+  const weightSubtext = $("calorie-weight-subtext");
   const settings = getCalorieSettings();
+  const unitSystem = getCalorieUnitSystem();
   if (targetInput) {
     const target = getCalorieTarget();
     targetInput.value = target ? String(Math.round(target)) : "";
@@ -2270,6 +2281,24 @@ function renderCalories() {
   if (weightInput) {
     const weight = normalizeGoalMetric(settings.currentWeight);
     weightInput.value = weight ? String(weight) : "";
+  }
+  if (heightLabel) {
+    heightLabel.textContent = unitSystem === "imperial" ? "Height (ft/in)" : "Height (cm)";
+  }
+  if (weightLabel) {
+    weightLabel.textContent = unitSystem === "imperial" ? "Current weight (lb)" : "Current weight (kg)";
+  }
+  if (heightInput) {
+    heightInput.placeholder = unitSystem === "imperial" ? "e.g. 5'8\"" : "e.g. 170 cm";
+  }
+  if (weightInput) {
+    weightInput.placeholder = unitSystem === "imperial" ? "e.g. 160 lb" : "e.g. 72.5 kg";
+  }
+  if (heightSubtext) {
+    heightSubtext.textContent = unitSystem === "imperial" ? "Height in feet and inches." : "Height in centimeters.";
+  }
+  if (weightSubtext) {
+    weightSubtext.textContent = unitSystem === "imperial" ? "Current weight in pounds." : "Current weight in kilograms.";
   }
   renderCalorieSummary();
   renderCalorieRing();
@@ -2707,15 +2736,29 @@ function initSettings() {
   customOption.value = "custom";
   customOption.textContent = "Custom";
   themeSelect.appendChild(customOption);
+
+  const unitSelect = $("calorie-unit-system");
+  if (unitSelect) {
+    unitSelect.addEventListener("change", (event) => {
+      const settings = getCalorieSettings();
+      settings.unitSystem = event.target.value === "imperial" ? "imperial" : "metric";
+      void saveState();
+      renderCalories();
+      renderSettings();
+    });
+  }
 }
 
 function renderSettings() {
   const customTheme = getCustomThemeColors();
   const presetId = resolveThemePresetId();
+  const unitSelect = $("calorie-unit-system");
+  const unitSystem = getCalorieUnitSystem();
   $("default-fast-select").value = resolveFastTypeId(state.settings.defaultFastTypeId);
   $("toggle-end-alert").classList.toggle("on", !!state.settings.notifyOnEnd);
   $("toggle-hourly-alert").classList.toggle("on", !!state.settings.hourlyReminders);
   $("toggle-ring-emojis").classList.toggle("on", state.settings.showRingEmojis !== false);
+  if (unitSelect) unitSelect.value = unitSystem;
   $("theme-preset-select").value = presetId;
   $("theme-custom-controls").classList.toggle("hidden", presetId !== "custom");
   $("theme-primary-color").value = customTheme.primaryColor;

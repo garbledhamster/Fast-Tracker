@@ -290,6 +290,17 @@
         </div>
 
         <div class="mt-4 space-y-3">
+          <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Calorie tracker</h2>
+          <div>
+            <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-unit-system">Measurement system</label>
+            <select id="calorie-unit-system" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
+              <option value="imperial">American (ft/lb)</option>
+              <option value="metric">European (cm/kg)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Theme</h2>
           <label class="block text-sm md:text-xs text-muted">Theme preset</label>
           <select id="theme-preset-select" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"></select>
@@ -464,12 +475,14 @@
           <input id="calorie-age-input" type="number" min="0" inputmode="numeric" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 32">
         </div>
         <div>
-          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-height-input">Height</label>
+          <label id="calorie-height-label" class="block text-sm md:text-xs text-muted mb-1" for="calorie-height-input">Height</label>
           <input id="calorie-height-input" type="number" min="0" inputmode="decimal" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 170 cm">
+          <p id="calorie-height-subtext" class="text-xs md:text-[11px] text-subtle mt-1">Height in centimeters.</p>
         </div>
         <div>
-          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-weight-input">Current weight</label>
+          <label id="calorie-weight-label" class="block text-sm md:text-xs text-muted mb-1" for="calorie-weight-input">Current weight</label>
           <input id="calorie-weight-input" type="number" min="0" step="0.1" inputmode="decimal" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 72.5 kg">
+          <p id="calorie-weight-subtext" class="text-xs md:text-[11px] text-subtle mt-1">Current weight in kilograms.</p>
         </div>
       </div>
     </div>
