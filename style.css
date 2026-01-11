@@ -387,6 +387,18 @@ body.bg-slate-950 {
   color: var(--text-color);
 }
 
+.header-nav-btn {
+  min-width: 6.5rem;
+  min-height: 3.1rem;
+}
+
+.header-nav-value {
+  min-height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .danger-glow {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger-color) 55%, transparent), 0 0 14px color-mix(in srgb, var(--danger-color) 55%, transparent);
 }
