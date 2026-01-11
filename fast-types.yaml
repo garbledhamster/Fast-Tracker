@@ -26,7 +26,7 @@
     - 12
     - 14
 - id: "16_8"
-  label: "16:8"
+  label: "16h"
   durationHours: 16
   milestoneHours:
     - 1
@@ -37,7 +37,7 @@
     - 14
     - 16
 - id: "18_6"
-  label: "18:6"
+  label: "18h"
   durationHours: 18
   milestoneHours:
     - 1
@@ -49,7 +49,7 @@
     - 16
     - 18
 - id: "20_4"
-  label: "20:4"
+  label: "20h"
   durationHours: 20
   milestoneHours:
     - 1
