@@ -38,6 +38,15 @@ const NOTES_SCHEMA = Object.freeze({
   createdAt: 0,
   updatedAt: 0,
   dateKey: "YYYY-MM-DD",
+  goalContext: {
+    dailyTarget: null,
+    goal: "",
+    age: null,
+    height: null,
+    bmi: null,
+    gender: "",
+    fitnessLevel: ""
+  },
   fastContext: {
     wasActive: false,
     fastId: null,
@@ -86,6 +95,13 @@ const defaultState = {
     showRingEmojis: true,
     timeDisplayMode: "elapsed",
     calories: {
+      dailyTarget: null,
+      goal: "",
+      age: null,
+      height: null,
+      bmi: null,
+      gender: "",
+      fitnessLevel: "",
       target: null,
       consumed: 0,
       view: "total"
@@ -400,7 +416,39 @@ async function normalizeNoteSnapshot(snap) {
     createdAt: normalizedCreatedAt,
     updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : 0,
     dateKey: typeof data.dateKey === "string" ? data.dateKey : "",
+    goalContext: normalizeGoalContext(data.goalContext),
     fastContext: normalizeFastContext(data.fastContext, normalizedCreatedAt)
+  };
+}
+
+function normalizeGoalMetric(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) return null;
+  return num;
+}
+
+function normalizeGoalContext(goalContext) {
+  if (!goalContext || typeof goalContext !== "object") {
+    return {
+      dailyTarget: null,
+      goal: "",
+      age: null,
+      height: null,
+      bmi: null,
+      gender: "",
+      fitnessLevel: ""
+    };
+  }
+
+  const dailyTarget = normalizeGoalMetric(goalContext.dailyTarget);
+  return {
+    dailyTarget: dailyTarget && dailyTarget > 0 ? dailyTarget : null,
+    goal: typeof goalContext.goal === "string" ? goalContext.goal : "",
+    age: normalizeGoalMetric(goalContext.age),
+    height: normalizeGoalMetric(goalContext.height),
+    bmi: normalizeGoalMetric(goalContext.bmi),
+    gender: typeof goalContext.gender === "string" ? goalContext.gender : "",
+    fitnessLevel: typeof goalContext.fitnessLevel === "string" ? goalContext.fitnessLevel : ""
   };
 }
 
@@ -465,7 +513,21 @@ function buildFastContext() {
   return buildFastContextAt(Date.now());
 }
 
-async function buildNotePayload({ text, dateKey, fastContext } = {}) {
+function buildGoalContext() {
+  const settings = getCalorieSettings();
+  const dailyTarget = getCalorieTarget();
+  return {
+    dailyTarget,
+    goal: typeof settings.goal === "string" ? settings.goal : "",
+    age: normalizeGoalMetric(settings.age),
+    height: normalizeGoalMetric(settings.height),
+    bmi: normalizeGoalMetric(settings.bmi),
+    gender: typeof settings.gender === "string" ? settings.gender : "",
+    fitnessLevel: typeof settings.fitnessLevel === "string" ? settings.fitnessLevel : ""
+  };
+}
+
+async function buildNotePayload({ text, dateKey, fastContext, goalContext } = {}) {
   const createdAt = Date.now();
   const payload = await encryptNotePayload((text || "").trim());
   return {
@@ -473,11 +535,12 @@ async function buildNotePayload({ text, dateKey, fastContext } = {}) {
     createdAt,
     updatedAt: createdAt,
     dateKey: formatDateKey(new Date(createdAt)),
+    goalContext: goalContext ?? buildGoalContext(),
     fastContext: fastContext ?? buildFastContextAt(createdAt)
   };
 }
 
-async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt } = {}) {
+async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt, goalContext } = {}) {
   const payload = { updatedAt: Date.now() };
   if (typeof text === "string") payload.payload = await encryptNotePayload(text.trim());
   if (typeof dateKey === "string") payload.dateKey = dateKey;
@@ -499,6 +562,25 @@ async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt } 
       if (Object.prototype.hasOwnProperty.call(fastContext, "elapsedMsAtNote")) {
         payload["fastContext.elapsedMsAtNote"] = fastContext.elapsedMsAtNote ?? null;
       }
+    }
+  }
+  const resolvedGoalContext = goalContext === undefined ? buildGoalContext() : goalContext;
+  if (resolvedGoalContext !== undefined) {
+    if (resolvedGoalContext === null || typeof resolvedGoalContext !== "object") {
+      payload.goalContext = resolvedGoalContext;
+    } else {
+      const fields = [
+        ["dailyTarget", resolvedGoalContext.dailyTarget],
+        ["goal", resolvedGoalContext.goal],
+        ["age", resolvedGoalContext.age],
+        ["height", resolvedGoalContext.height],
+        ["bmi", resolvedGoalContext.bmi],
+        ["gender", resolvedGoalContext.gender],
+        ["fitnessLevel", resolvedGoalContext.fitnessLevel]
+      ];
+      fields.forEach(([key, value]) => {
+        if (value !== undefined) payload[`goalContext.${key}`] = value;
+      });
     }
   }
   if (typeof createdAt === "number") payload.createdAt = createdAt;
@@ -891,6 +973,7 @@ function mergeStateWithDefaults(parsed) {
   }
   merged.settings = Object.assign(merged.settings, parsedSettings);
   merged.settings.theme = Object.assign({}, defaultState.settings.theme, parsedTheme);
+  merged.settings.calories = mergeCalorieSettings(parsedSettings.calories);
   merged.activeFast = parsed.activeFast || null;
   merged.history = Array.isArray(parsed.history) ? parsed.history : [];
   merged.reminders = Object.assign(merged.reminders, parsed.reminders || {});
@@ -1696,9 +1779,23 @@ function getActiveType() {
   return getTypeById(selectedFastTypeId);
 }
 
+function mergeCalorieSettings(settings) {
+  const next = {
+    ...defaultState.settings.calories,
+    ...(settings && typeof settings === "object" ? settings : {})
+  };
+  const legacyTarget = Number(next.target);
+  if (next.dailyTarget == null && Number.isFinite(legacyTarget) && legacyTarget > 0) {
+    next.dailyTarget = legacyTarget;
+  }
+  return next;
+}
+
 function getCalorieSettings() {
   if (!state.settings.calories || typeof state.settings.calories !== "object") {
-    state.settings.calories = { ...defaultState.settings.calories };
+    state.settings.calories = mergeCalorieSettings();
+  } else {
+    state.settings.calories = mergeCalorieSettings(state.settings.calories);
   }
   return state.settings.calories;
 }
@@ -1712,7 +1809,7 @@ function parseCalorieValue(value) {
 }
 
 function getCalorieTarget() {
-  const target = Number(getCalorieSettings().target);
+  const target = Number(getCalorieSettings().dailyTarget);
   return Number.isFinite(target) && target > 0 ? target : null;
 }
 
@@ -1838,8 +1935,15 @@ function renderCalorieButton() {
 }
 
 function renderCalories() {
-  const targetInput = $("calorie-target-input");
+  const targetInput = $("calorie-daily-target-input");
   const consumedInput = $("calorie-consumed-input");
+  const goalInput = $("calorie-goal-input");
+  const genderInput = $("calorie-gender-input");
+  const fitnessInput = $("calorie-fitness-input");
+  const ageInput = $("calorie-age-input");
+  const heightInput = $("calorie-height-input");
+  const bmiInput = $("calorie-bmi-input");
+  const settings = getCalorieSettings();
   if (targetInput) {
     const target = getCalorieTarget();
     targetInput.value = target ? String(Math.round(target)) : "";
@@ -1848,6 +1952,21 @@ function renderCalories() {
     const consumed = getCalorieConsumed();
     consumedInput.value = consumed ? String(Math.round(consumed)) : "";
   }
+  if (goalInput) goalInput.value = settings.goal || "";
+  if (genderInput) genderInput.value = settings.gender || "";
+  if (fitnessInput) fitnessInput.value = settings.fitnessLevel || "";
+  if (ageInput) {
+    const age = normalizeGoalMetric(settings.age);
+    ageInput.value = age ? String(age) : "";
+  }
+  if (heightInput) {
+    const height = normalizeGoalMetric(settings.height);
+    heightInput.value = height ? String(height) : "";
+  }
+  if (bmiInput) {
+    const bmi = normalizeGoalMetric(settings.bmi);
+    bmiInput.value = bmi ? String(bmi) : "";
+  }
   renderCalorieViewButtons();
   renderCalorieSummary();
   renderCalorieRing();
@@ -1855,13 +1974,20 @@ function renderCalories() {
 }
 
 function initCalories() {
-  const targetInput = $("calorie-target-input");
+  const targetInput = $("calorie-daily-target-input");
   const consumedInput = $("calorie-consumed-input");
+  const goalInput = $("calorie-goal-input");
+  const genderInput = $("calorie-gender-input");
+  const fitnessInput = $("calorie-fitness-input");
+  const ageInput = $("calorie-age-input");
+  const heightInput = $("calorie-height-input");
+  const bmiInput = $("calorie-bmi-input");
 
   if (targetInput) {
     targetInput.addEventListener("input", (event) => {
       const next = parseCalorieValue(event.target.value);
       const settings = getCalorieSettings();
+      settings.dailyTarget = next;
       settings.target = next;
       void saveState();
       renderCalories();
@@ -1873,6 +1999,63 @@ function initCalories() {
       const next = parseCalorieValue(event.target.value);
       const settings = getCalorieSettings();
       settings.consumed = next ?? 0;
+      void saveState();
+      renderCalories();
+    });
+  }
+
+  if (goalInput) {
+    goalInput.addEventListener("change", (event) => {
+      const settings = getCalorieSettings();
+      settings.goal = event.target.value || "";
+      void saveState();
+      renderCalories();
+    });
+  }
+
+  if (genderInput) {
+    genderInput.addEventListener("change", (event) => {
+      const settings = getCalorieSettings();
+      settings.gender = event.target.value || "";
+      void saveState();
+      renderCalories();
+    });
+  }
+
+  if (fitnessInput) {
+    fitnessInput.addEventListener("change", (event) => {
+      const settings = getCalorieSettings();
+      settings.fitnessLevel = event.target.value || "";
+      void saveState();
+      renderCalories();
+    });
+  }
+
+  if (ageInput) {
+    ageInput.addEventListener("input", (event) => {
+      const next = parseCalorieValue(event.target.value);
+      const settings = getCalorieSettings();
+      settings.age = next;
+      void saveState();
+      renderCalories();
+    });
+  }
+
+  if (heightInput) {
+    heightInput.addEventListener("input", (event) => {
+      const next = parseCalorieValue(event.target.value);
+      const settings = getCalorieSettings();
+      settings.height = next;
+      void saveState();
+      renderCalories();
+    });
+  }
+
+  if (bmiInput) {
+    bmiInput.addEventListener("input", (event) => {
+      const next = parseCalorieValue(event.target.value);
+      const settings = getCalorieSettings();
+      settings.bmi = next;
       void saveState();
       renderCalories();
     });
