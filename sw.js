@@ -4,6 +4,7 @@ const ASSETS = [
   "./index.html",
   "./style.css",
   "./script.js",
+  "./calorie-tips.yaml",
   "./site.webmanifest",
   "./assets/favicon/android-chrome-192x192.png",
   "./assets/favicon/android-chrome-512x512.png",
