@@ -2088,9 +2088,20 @@ function getCalorieTipBucket() {
 
 function renderCalorieTipOrbs() {
   const layer = $("calorie-ring-emoji-layer");
+  const panel = $("calorie-tip-panel");
   const panelTitle = $("calorie-tip-title");
   const panelDetail = $("calorie-tip-detail");
   if (!layer) return;
+
+  const isEnabled = state.settings.showRingEmojis !== false;
+  if (!isEnabled) {
+    layer.classList.add("hidden");
+    if (panel) panel.classList.add("hidden");
+    return;
+  }
+
+  layer.classList.remove("hidden");
+  if (panel) panel.classList.remove("hidden");
 
   const goalId = String(getCalorieSettings().goal || "").trim();
   const bucket = getCalorieTipBucket();
@@ -2526,7 +2537,9 @@ function initButtons() {
     state.settings.showRingEmojis = !state.settings.showRingEmojis;
     void saveState();
     renderSettings();
+    applyRingEmojiVisibility();
     updateTimer();
+    renderCalories();
   });
 
   $("theme-preset-select").addEventListener("change", (event) => {
@@ -2773,13 +2786,20 @@ function applyRingEmojiVisibility() {
   const isEnabled = state.settings.showRingEmojis !== false;
   const layer = $("ring-emoji-layer");
   const panel = $("ring-emoji-panel");
+  const calorieLayer = $("calorie-ring-emoji-layer");
+  const caloriePanel = $("calorie-tip-panel");
   if (layer) layer.classList.toggle("hidden", !isEnabled);
   if (panel) panel.classList.toggle("hidden", !isEnabled);
+  if (calorieLayer) calorieLayer.classList.toggle("hidden", !isEnabled);
+  if (caloriePanel) caloriePanel.classList.toggle("hidden", !isEnabled);
   if (!isEnabled) {
     ringEmojiTypeId = null;
     ringEmojiLayoutSize = 0;
     ringEmojiSelectionKey = null;
     ringEmojiSelectionDetail = null;
+    calorieTipGoalId = null;
+    calorieTipLayoutSize = 0;
+    calorieTipSelectionKey = null;
   }
 }
 
