@@ -43,7 +43,7 @@ const NOTES_SCHEMA = Object.freeze({
     goal: "",
     age: null,
     height: null,
-    bmi: null,
+    currentWeight: null,
     gender: "",
     fitnessLevel: ""
   },
@@ -63,7 +63,7 @@ const NOTES_SCHEMA = Object.freeze({
       goal: "",
       age: null,
       height: null,
-      bmi: null,
+      currentWeight: null,
       gender: "",
       fitnessLevel: ""
     }
@@ -113,7 +113,7 @@ const defaultState = {
       goal: "",
       age: null,
       height: null,
-      bmi: null,
+      currentWeight: null,
       gender: "",
       fitnessLevel: "",
       target: null,
@@ -507,19 +507,20 @@ function normalizeGoalContext(goalContext) {
       goal: "",
       age: null,
       height: null,
-      bmi: null,
+      currentWeight: null,
       gender: "",
       fitnessLevel: ""
     };
   }
 
   const dailyTarget = normalizeGoalMetric(goalContext.dailyTarget);
+  const legacyWeight = normalizeGoalMetric(goalContext.bmi);
   return {
     dailyTarget: dailyTarget && dailyTarget > 0 ? dailyTarget : null,
     goal: typeof goalContext.goal === "string" ? goalContext.goal : "",
     age: normalizeGoalMetric(goalContext.age),
     height: normalizeGoalMetric(goalContext.height),
-    bmi: normalizeGoalMetric(goalContext.bmi),
+    currentWeight: normalizeGoalMetric(goalContext.currentWeight) ?? legacyWeight,
     gender: typeof goalContext.gender === "string" ? goalContext.gender : "",
     fitnessLevel: typeof goalContext.fitnessLevel === "string" ? goalContext.fitnessLevel : ""
   };
@@ -608,7 +609,7 @@ function buildGoalContext() {
     goal: typeof settings.goal === "string" ? settings.goal : "",
     age: normalizeGoalMetric(settings.age),
     height: normalizeGoalMetric(settings.height),
-    bmi: normalizeGoalMetric(settings.bmi),
+    currentWeight: normalizeGoalMetric(settings.currentWeight),
     gender: typeof settings.gender === "string" ? settings.gender : "",
     fitnessLevel: typeof settings.fitnessLevel === "string" ? settings.fitnessLevel : ""
   };
@@ -669,7 +670,7 @@ async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt, g
         ["goal", resolvedGoalContext.goal],
         ["age", resolvedGoalContext.age],
         ["height", resolvedGoalContext.height],
-        ["bmi", resolvedGoalContext.bmi],
+        ["currentWeight", resolvedGoalContext.currentWeight],
         ["gender", resolvedGoalContext.gender],
         ["fitnessLevel", resolvedGoalContext.fitnessLevel]
       ];
@@ -1940,6 +1941,11 @@ function mergeCalorieSettings(settings) {
   if (next.dailyTarget == null && Number.isFinite(legacyTarget) && legacyTarget > 0) {
     next.dailyTarget = legacyTarget;
   }
+  if (next.currentWeight == null && next.bmi != null) {
+    const legacyWeight = normalizeGoalMetric(next.bmi);
+    if (legacyWeight != null) next.currentWeight = legacyWeight;
+  }
+  if ("bmi" in next) delete next.bmi;
   return next;
 }
 
@@ -2240,7 +2246,7 @@ function renderCalories() {
   const fitnessInput = $("calorie-fitness-input");
   const ageInput = $("calorie-age-input");
   const heightInput = $("calorie-height-input");
-  const bmiInput = $("calorie-bmi-input");
+  const weightInput = $("calorie-weight-input");
   const settings = getCalorieSettings();
   if (targetInput) {
     const target = getCalorieTarget();
@@ -2261,9 +2267,9 @@ function renderCalories() {
     const height = normalizeGoalMetric(settings.height);
     heightInput.value = height ? String(height) : "";
   }
-  if (bmiInput) {
-    const bmi = normalizeGoalMetric(settings.bmi);
-    bmiInput.value = bmi ? String(bmi) : "";
+  if (weightInput) {
+    const weight = normalizeGoalMetric(settings.currentWeight);
+    weightInput.value = weight ? String(weight) : "";
   }
   renderCalorieSummary();
   renderCalorieRing();
@@ -2278,7 +2284,7 @@ function initCalories() {
   const fitnessInput = $("calorie-fitness-input");
   const ageInput = $("calorie-age-input");
   const heightInput = $("calorie-height-input");
-  const bmiInput = $("calorie-bmi-input");
+  const weightInput = $("calorie-weight-input");
   const ringValue = $("calorie-ring-value");
 
   if (targetInput) {
@@ -2349,11 +2355,11 @@ function initCalories() {
     });
   }
 
-  if (bmiInput) {
-    bmiInput.addEventListener("input", (event) => {
+  if (weightInput) {
+    weightInput.addEventListener("input", (event) => {
       const next = parseCalorieValue(event.target.value);
       const settings = getCalorieSettings();
-      settings.bmi = next;
+      settings.currentWeight = next;
       void saveState();
       renderCalories();
     });
