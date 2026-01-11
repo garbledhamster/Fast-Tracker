@@ -2444,6 +2444,15 @@ function initButtons() {
   const confirmBackdrop = document.querySelector("#confirm-fast-modal .confirm-fast-backdrop");
   if (confirmBackdrop) confirmBackdrop.addEventListener("click", closeConfirmFastModal);
 
+  $("calorie-target-drawer-btn").addEventListener("click", openCalorieTargetDrawer);
+  $("calorie-goal-drawer-btn").addEventListener("click", openCalorieGoalDrawer);
+  $("calorie-target-close").addEventListener("click", closeCalorieTargetDrawer);
+  $("calorie-goal-close").addEventListener("click", closeCalorieGoalDrawer);
+  const calorieTargetBackdrop = document.querySelector("#calorie-target-drawer .absolute.inset-0");
+  if (calorieTargetBackdrop) calorieTargetBackdrop.addEventListener("click", closeCalorieTargetDrawer);
+  const calorieGoalBackdrop = document.querySelector("#calorie-goal-drawer .absolute.inset-0");
+  if (calorieGoalBackdrop) calorieGoalBackdrop.addEventListener("click", closeCalorieGoalDrawer);
+
   $("toggle-end-alert").addEventListener("click", () => {
     state.settings.notifyOnEnd = !state.settings.notifyOnEnd;
     void saveState();
@@ -2569,6 +2578,26 @@ function initButtons() {
   attachNoteEditorSwipeHandlers();
 
   document.addEventListener("visibilitychange", () => { if (!document.hidden) renderAll(); });
+}
+
+function openCalorieTargetDrawer() {
+  $("calorie-target-drawer").classList.remove("hidden");
+  $("calorie-target-drawer-btn").setAttribute("aria-expanded", "true");
+}
+
+function closeCalorieTargetDrawer() {
+  $("calorie-target-drawer").classList.add("hidden");
+  $("calorie-target-drawer-btn").setAttribute("aria-expanded", "false");
+}
+
+function openCalorieGoalDrawer() {
+  $("calorie-goal-drawer").classList.remove("hidden");
+  $("calorie-goal-drawer-btn").setAttribute("aria-expanded", "true");
+}
+
+function closeCalorieGoalDrawer() {
+  $("calorie-goal-drawer").classList.add("hidden");
+  $("calorie-goal-drawer-btn").setAttribute("aria-expanded", "false");
 }
 
 function openConfirmFastModal({ title, message, confirmLabel, confirmClasses, onConfirm, focusAfterClose }) {

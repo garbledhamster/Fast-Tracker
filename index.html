@@ -220,63 +220,19 @@
               </div>
             </div>
           </div>
-          <div class="surface border border-default rounded-2xl px-4 py-4 space-y-3">
-            <div>
-              <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-daily-target-input">Daily target</label>
-              <input id="calorie-daily-target-input" type="number" min="0" inputmode="numeric" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 2000">
+          <div class="flex flex-col items-center gap-3">
+            <div class="text-xs uppercase tracking-[0.2em] text-subtle">Calorie details</div>
+            <div class="flex items-center justify-center gap-3">
+              <button id="calorie-target-drawer-btn" type="button" class="fast-type-chip text-[10px] md:text-[9px]" aria-controls="calorie-target-drawer" aria-expanded="false">
+                <span class="block leading-tight">Daily</span>
+                <span class="block leading-tight">Target</span>
+              </button>
+              <button id="calorie-goal-drawer-btn" type="button" class="fast-type-chip text-[10px] md:text-[9px]" aria-controls="calorie-goal-drawer" aria-expanded="false">
+                <span class="block leading-tight">Goal</span>
+                <span class="block leading-tight">Details</span>
+              </button>
             </div>
-            <div>
-              <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-consumed-input">Consumed today</label>
-              <input id="calorie-consumed-input" type="number" min="0" inputmode="numeric" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 1200">
-            </div>
-            <p id="calorie-summary" class="text-sm md:text-xs text-muted">Set a target to track remaining calories.</p>
-          </div>
-          <div class="surface border border-default rounded-2xl px-4 py-4 space-y-3">
-            <h3 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Goal details</h3>
-            <div class="grid gap-3 md:grid-cols-2">
-              <div>
-                <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-goal-input">Goal</label>
-                <select id="calorie-goal-input" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
-                  <option value="">Select goal</option>
-                  <option value="lose">Lose weight</option>
-                  <option value="maintain">Maintain</option>
-                  <option value="gain">Gain muscle</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-gender-input">Gender</label>
-                <select id="calorie-gender-input" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
-                  <option value="">Select gender</option>
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
-                  <option value="nonbinary">Non-binary</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-fitness-input">Fitness level</label>
-                <select id="calorie-fitness-input" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
-                  <option value="">Select level</option>
-                  <option value="sedentary">Sedentary</option>
-                  <option value="light">Lightly active</option>
-                  <option value="moderate">Moderately active</option>
-                  <option value="active">Active</option>
-                  <option value="athlete">Athlete</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-age-input">Age</label>
-                <input id="calorie-age-input" type="number" min="0" inputmode="numeric" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 32">
-              </div>
-              <div>
-                <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-height-input">Height</label>
-                <input id="calorie-height-input" type="number" min="0" inputmode="decimal" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 170 cm">
-              </div>
-              <div>
-                <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-bmi-input">BMI</label>
-                <input id="calorie-bmi-input" type="number" min="0" step="0.1" inputmode="decimal" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 22.5">
-              </div>
-            </div>
+            <p id="calorie-summary" class="text-sm md:text-xs text-muted text-center">Set a target to track remaining calories.</p>
           </div>
         </div>
 
@@ -443,6 +399,80 @@
         </button>
       </div>
     </nav>
+  </div>
+
+  <div id="calorie-target-drawer" class="fixed inset-0 z-30 hidden">
+    <div class="absolute inset-0 bg-black/50"></div>
+    <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-base md:text-sm font-medium text-default">Daily target</div>
+        <button id="calorie-target-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-daily-target-input">Daily target</label>
+          <input id="calorie-daily-target-input" type="number" min="0" inputmode="numeric" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 2000">
+        </div>
+        <div>
+          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-consumed-input">Consumed today</label>
+          <input id="calorie-consumed-input" type="number" min="0" inputmode="numeric" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 1200">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="calorie-goal-drawer" class="fixed inset-0 z-30 hidden">
+    <div class="absolute inset-0 bg-black/50"></div>
+    <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4 max-h-[70vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-base md:text-sm font-medium text-default">Goal details</div>
+        <button id="calorie-goal-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+      </div>
+      <div class="grid gap-3 md:grid-cols-2">
+        <div>
+          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-goal-input">Goal</label>
+          <select id="calorie-goal-input" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <option value="">Select goal</option>
+            <option value="lose">Lose weight</option>
+            <option value="maintain">Maintain</option>
+            <option value="gain">Gain muscle</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-gender-input">Gender</label>
+          <select id="calorie-gender-input" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <option value="">Select gender</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="nonbinary">Non-binary</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-fitness-input">Fitness level</label>
+          <select id="calorie-fitness-input" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <option value="">Select level</option>
+            <option value="sedentary">Sedentary</option>
+            <option value="light">Lightly active</option>
+            <option value="moderate">Moderately active</option>
+            <option value="active">Active</option>
+            <option value="athlete">Athlete</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-age-input">Age</label>
+          <input id="calorie-age-input" type="number" min="0" inputmode="numeric" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 32">
+        </div>
+        <div>
+          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-height-input">Height</label>
+          <input id="calorie-height-input" type="number" min="0" inputmode="decimal" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 170 cm">
+        </div>
+        <div>
+          <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-bmi-input">BMI</label>
+          <input id="calorie-bmi-input" type="number" min="0" step="0.1" inputmode="decimal" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="e.g. 22.5">
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="fast-type-modal" class="fixed inset-0 z-30 hidden">
