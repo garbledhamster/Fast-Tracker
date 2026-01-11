@@ -169,7 +169,6 @@ let editingNoteCreatedAt = null;
 let editingNoteOpenedAt = null;
 let editingNoteInitialText = "";
 let editingNoteInitialCalories = "";
-let editingNoteInitialFoodNote = "";
 let editingHistoryId = null;
 
 let navHoldTimer = null;
@@ -481,6 +480,9 @@ async function normalizeNoteSnapshot(snap) {
     text = data.text;
   }
   if (!calorieEntry) calorieEntry = normalizeCalorieEntry(data.calorieEntry);
+  if (!text && calorieEntry?.foodNote) {
+    text = calorieEntry.foodNote;
+  }
   const normalizedCreatedAt = typeof data.createdAt === "number" ? data.createdAt : 0;
   return {
     id: snap.id,
@@ -725,14 +727,14 @@ function openNoteEditor(note = null) {
   editingNoteCreatedAt = note?.createdAt ?? null;
   editingNoteOpenedAt = Date.now();
 
-  $("note-editor-content").value = note?.text || "";
+  const noteText = note?.text || "";
+  const legacyFoodNote = note?.calorieEntry?.foodNote || "";
+  $("note-editor-content").value = noteText || legacyFoodNote;
   $("note-editor-calories").value = Number.isFinite(note?.calorieEntry?.calories)
     ? note.calorieEntry.calories
     : "";
-  $("note-editor-food-note").value = note?.calorieEntry?.foodNote || "";
   editingNoteInitialText = $("note-editor-content").value.trim();
   editingNoteInitialCalories = $("note-editor-calories").value.trim();
-  editingNoteInitialFoodNote = $("note-editor-food-note").value.trim();
   updateNoteEditorMeta();
   $("note-editor-delete").classList.toggle("hidden", !editingNoteId);
   modal.classList.remove("hidden");
@@ -748,11 +750,9 @@ function parseCalorieInput(value) {
 
 function buildCalorieEntryFromEditor() {
   const calories = parseCalorieInput($("note-editor-calories").value.trim());
-  const foodNote = $("note-editor-food-note").value.trim();
-  if (calories === null && !foodNote) return null;
+  if (calories === null) return null;
   return {
     calories,
-    foodNote,
     goalSnapshot: buildGoalContext()
   };
 }
@@ -766,11 +766,9 @@ async function handleNoteEditorSwipeDismiss() {
   if (!modal || modal.classList.contains("hidden")) return;
   const text = $("note-editor-content").value.trim();
   const caloriesValue = $("note-editor-calories").value.trim();
-  const foodNoteValue = $("note-editor-food-note").value.trim();
   const hasChanges = text !== editingNoteInitialText
-    || caloriesValue !== editingNoteInitialCalories
-    || foodNoteValue !== editingNoteInitialFoodNote;
-  const hasContent = Boolean(text) || Boolean(caloriesValue) || Boolean(foodNoteValue);
+    || caloriesValue !== editingNoteInitialCalories;
+  const hasContent = Boolean(text) || Boolean(caloriesValue);
   if (hasChanges && hasContent) {
     const saved = await persistNoteEditor({ closeOnSave: false });
     if (!saved) return;
@@ -850,7 +848,6 @@ function closeNoteEditor() {
   }, 250);
   $("note-editor-content").value = "";
   $("note-editor-calories").value = "";
-  $("note-editor-food-note").value = "";
   editingNoteId = null;
   editingNoteDateKey = null;
   editingNoteContext = null;
@@ -858,7 +855,6 @@ function closeNoteEditor() {
   editingNoteOpenedAt = null;
   editingNoteInitialText = "";
   editingNoteInitialCalories = "";
-  editingNoteInitialFoodNote = "";
 }
 
 async function persistNoteEditor({ closeOnSave = true } = {}) {
@@ -3619,7 +3615,7 @@ function buildNoteCard(note) {
 
     const calorieText = document.createElement("div");
     calorieText.className = "note-calorie-text";
-    calorieText.textContent = note.text || note.calorieEntry?.foodNote || "Calorie entry";
+    calorieText.textContent = note.text || "Calorie entry";
 
     entry.appendChild(calorieBox);
     entry.appendChild(calorieText);
