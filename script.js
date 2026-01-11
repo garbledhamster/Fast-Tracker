@@ -1758,6 +1758,62 @@ function renderCalorieSummary() {
   summary.textContent = `${formatCalories(remaining)} calories left today.`;
 }
 
+function renderCalorieRing() {
+  const ring = $("calorie-progress-ring");
+  const valueEl = $("calorie-ring-value");
+  const labelEl = $("calorie-ring-label");
+  const detailEl = $("calorie-ring-detail");
+  const panelTitle = $("calorie-ring-panel-title");
+  const panelDetail = $("calorie-ring-panel-detail");
+  if (!ring || !valueEl || !labelEl || !detailEl) return;
+
+  ring.setAttribute("stroke-dasharray", String(RING_CIRC));
+
+  const target = getCalorieTarget();
+  const consumed = getCalorieConsumed();
+  const remaining = getCalorieRemaining();
+  const view = getCalorieView();
+  const viewLabel = CALORIE_VIEWS.find(v => v.id === view)?.label ?? "Total";
+
+  let value = 0;
+  let progress = 0;
+  let labelText = viewLabel;
+  let detailText = "Set a daily target to track progress.";
+  let panelTitleText = "Tap a view to focus the ring";
+  let panelDetailText = "";
+
+  if (!target) {
+    labelText = "No target set";
+    value = 0;
+    progress = 0;
+    panelTitleText = "Add a daily target to unlock progress tracking";
+  } else {
+    if (view === "total") {
+      value = target;
+      progress = Math.min(consumed / target, 1);
+      detailText = `${formatCalories(consumed)} consumed of ${formatCalories(target)}.`;
+    } else if (view === "consumed") {
+      value = consumed;
+      progress = Math.min(consumed / target, 1);
+      detailText = `${formatCalories(consumed)} of ${formatCalories(target)} consumed.`;
+    } else {
+      value = remaining ?? 0;
+      progress = remaining !== null ? Math.min(remaining / target, 1) : 0;
+      detailText = `${formatCalories(remaining ?? 0)} left of ${formatCalories(target)}.`;
+    }
+
+    panelDetailText = `Target ${formatCalories(target)} · Consumed ${formatCalories(consumed)} · Left ${formatCalories(remaining ?? 0)}`;
+  }
+
+  valueEl.textContent = formatCalories(value);
+  labelEl.textContent = labelText;
+  detailEl.textContent = detailText;
+  ring.setAttribute("stroke-dashoffset", String(RING_CIRC * (1 - progress)));
+
+  if (panelTitle) panelTitle.textContent = panelTitleText;
+  if (panelDetail) panelDetail.textContent = panelDetailText;
+}
+
 function renderCalorieButton() {
   const button = $("calorie-btn");
   const label = $("calorie-label");
@@ -1794,6 +1850,7 @@ function renderCalories() {
   }
   renderCalorieViewButtons();
   renderCalorieSummary();
+  renderCalorieRing();
   renderCalorieButton();
 }
 

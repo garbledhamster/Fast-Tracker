@@ -185,6 +185,33 @@
       <section id="tab-calories" class="h-full flex-col gap-4 hidden">
         <div class="space-y-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Calories</h2>
+          <div class="flex justify-center mt-4">
+            <div class="w-full max-w-md">
+              <div class="ring-shell relative mx-auto">
+                <svg viewBox="0 0 200 200" class="w-full h-full -rotate-90">
+                  <circle cx="100" cy="100" r="80" class="progress-ring-track" stroke-width="16" fill="none"></circle>
+                  <circle id="calorie-progress-ring" cx="100" cy="100" r="80" stroke-width="16" stroke-linecap="round" fill="none" stroke-dasharray="502.6548245743669" stroke-dashoffset="502.6548245743669"></circle>
+                </svg>
+
+                <div id="calorie-ring-emoji-layer" class="ring-emoji-layer absolute inset-0"></div>
+
+                <div class="absolute inset-0 flex flex-col items-center justify-center select-none">
+                  <div class="mb-3">
+                    <div id="calorie-ring-label" class="text-sm md:text-xs px-3 py-1 md:px-2 md:py-0.5 rounded-full">No target set</div>
+                  </div>
+
+                  <div id="calorie-ring-value" class="text-5xl md:text-4xl font-semibold tracking-tight px-3 py-2 rounded-2xl">0</div>
+                  <div id="calorie-ring-sub" class="text-xs md:text-[11px] uppercase tracking-[0.2em] text-subtle mt-1">Calories</div>
+                  <div id="calorie-ring-detail" class="text-sm md:text-xs text-muted mt-2 md:mt-1">Set a daily target to track progress.</div>
+                </div>
+              </div>
+
+              <div id="calorie-ring-panel" class="mt-4 rounded-2xl border border-default surface-soft px-4 py-3 text-center">
+                <div id="calorie-ring-panel-title" class="text-sm md:text-xs text-default">Tap a view to focus the ring</div>
+                <div id="calorie-ring-panel-detail" class="text-xs md:text-[11px] text-muted mt-1"></div>
+              </div>
+            </div>
+          </div>
           <div class="surface border border-default rounded-2xl px-4 py-4 space-y-3">
             <div>
               <label class="block text-sm md:text-xs text-muted mb-1" for="calorie-target-input">Daily target</label>

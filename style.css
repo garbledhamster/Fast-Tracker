@@ -208,10 +208,20 @@ body.bg-slate-950 {
   stroke: var(--secondary-color);
 }
 
+#calorie-progress-ring {
+  stroke: var(--primary-color);
+}
+
 #timer-type {
   color: color-mix(in srgb, var(--secondary-color) 70%, white);
   border-color: color-mix(in srgb, var(--secondary-color) 45%, transparent);
   background: color-mix(in srgb, var(--secondary-color) 20%, transparent);
+}
+
+#calorie-ring-label {
+  color: color-mix(in srgb, var(--primary-color) 70%, white);
+  border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
+  background: color-mix(in srgb, var(--primary-color) 20%, transparent);
 }
 
 #auth-toggle {
