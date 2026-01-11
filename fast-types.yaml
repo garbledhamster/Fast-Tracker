@@ -1,6 +1,7 @@
 - id: "8"
   label: "8h"
   durationHours: 8
+  useCase: "Ease in with a short reset or align with sleep-only fasting."
   milestoneHours:
     - 1
     - 2
@@ -9,6 +10,7 @@
 - id: "12_12"
   label: "12h"
   durationHours: 12
+  useCase: "Keep an overnight fast that fits a steady daily rhythm."
   milestoneHours:
     - 1
     - 2
@@ -18,6 +20,7 @@
 - id: "14_10"
   label: "14h"
   durationHours: 14
+  useCase: "Stretch the morning window for a gentle fat-burn focus."
   milestoneHours:
     - 1
     - 2
@@ -28,6 +31,7 @@
 - id: "16_8"
   label: "16h"
   durationHours: 16
+  useCase: "The classic intermittent fast for consistent weight management."
   milestoneHours:
     - 1
     - 2
@@ -39,6 +43,7 @@
 - id: "18_6"
   label: "18h"
   durationHours: 18
+  useCase: "Go longer for stronger appetite control and focus."
   milestoneHours:
     - 1
     - 2
@@ -51,6 +56,7 @@
 - id: "20_4"
   label: "20h"
   durationHours: 20
+  useCase: "Best for one-meal-a-day days or tighter schedules."
   milestoneHours:
     - 1
     - 2
@@ -64,6 +70,7 @@
 - id: "24"
   label: "24h"
   durationHours: 24
+  useCase: "A full-day reset when you want a longer break."
   milestoneHours:
     - 1
     - 2
@@ -78,6 +85,7 @@
 - id: "36"
   label: "36h"
   durationHours: 36
+  useCase: "Extended fast for experienced fasters seeking a deeper reset."
   milestoneHours:
     - 1
     - 2

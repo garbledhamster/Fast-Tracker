@@ -2551,7 +2551,7 @@ function applyTypeToActiveFast(typeId) {
 
 function openFastTypeModal(type) {
   $("modal-type-label").textContent = type.label + " fast";
-  $("modal-type-duration").textContent = type.durationHours + " hours";
+  $("modal-type-duration").textContent = type.useCase || (type.durationHours + " hours");
   $("fast-type-modal").classList.remove("hidden");
 }
 
