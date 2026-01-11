@@ -1970,15 +1970,37 @@ function getCalorieConsumed() {
   return Number.isFinite(consumed) && consumed > 0 ? consumed : 0;
 }
 
+function getCalorieDisplayDateKey() {
+  const todayKey = formatDateKey(new Date());
+  if (currentTab === "history" && selectedDayKey) return selectedDayKey;
+  return todayKey;
+}
+
+function getNoteCaloriesForDateKey(dateKey = formatDateKey(new Date())) {
+  if (!Array.isArray(notes) || notes.length === 0) return 0;
+  return notes.reduce((sum, note) => {
+    if (!note || note.dateKey !== dateKey) return sum;
+    const calories = Number(note.calorieEntry?.calories);
+    if (!Number.isFinite(calories)) return sum;
+    return sum + calories;
+  }, 0);
+}
+
+function getEffectiveCalorieConsumed(dateKey = getCalorieDisplayDateKey()) {
+  const todayKey = formatDateKey(new Date());
+  const baseConsumed = dateKey === todayKey ? getCalorieConsumed() : 0;
+  return baseConsumed + getNoteCaloriesForDateKey(dateKey);
+}
+
 function getCalorieView() {
   const view = getCalorieSettings().view;
   return CALORIE_VIEWS.some(v => v.id === view) ? view : "total";
 }
 
-function getCalorieRemaining() {
+function getCalorieRemaining(consumed = getEffectiveCalorieConsumed()) {
   const target = getCalorieTarget();
   if (!target) return null;
-  return Math.max(0, target - getCalorieConsumed());
+  return Math.max(0, target - consumed);
 }
 
 function formatCalories(value) {
@@ -1990,7 +2012,8 @@ function renderCalorieSummary() {
   const summary = $("calorie-summary");
   if (!summary) return;
   const target = getCalorieTarget();
-  const consumed = getCalorieConsumed();
+  const dateKey = getCalorieDisplayDateKey();
+  const consumed = getEffectiveCalorieConsumed(dateKey);
   if (!target) {
     summary.textContent = "Set a target to track remaining calories.";
     return;
@@ -2009,8 +2032,9 @@ function renderCalorieRing() {
   ring.setAttribute("stroke-dasharray", String(RING_CIRC));
 
   const target = getCalorieTarget();
-  const consumed = getCalorieConsumed();
-  const remaining = getCalorieRemaining();
+  const dateKey = getCalorieDisplayDateKey();
+  const consumed = getEffectiveCalorieConsumed(dateKey);
+  const remaining = getCalorieRemaining(consumed);
   const view = getCalorieView();
   const viewLabel = CALORIE_VIEWS.find(v => v.id === view)?.label ?? "Total";
 
@@ -2185,8 +2209,9 @@ function renderCalorieButton() {
   if (!button || !modeLabel || !valueLabel) return;
 
   const target = getCalorieTarget();
-  const consumed = getCalorieConsumed();
-  const remaining = getCalorieRemaining();
+  const dateKey = getCalorieDisplayDateKey();
+  const consumed = getEffectiveCalorieConsumed(dateKey);
+  const remaining = getCalorieRemaining(consumed);
   const view = getCalorieView();
   const viewLabel = CALORIE_VIEWS.find(v => v.id === view)?.label ?? "Total";
   const isMissingConfig = !target;
