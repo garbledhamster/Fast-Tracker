@@ -3450,7 +3450,11 @@ function renderDayDetails() {
 
   if (!day) { summary.textContent = "No fasts logged"; return; }
 
-  summary.textContent = `${day.entries.length} fast(s), ${day.totalHours.toFixed(1)} total hours`;
+  const dayNoteCalories = getNoteCaloriesForDateKey(selectedDayKey);
+  const calorieSummary = Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
+    ? `, ${formatCalories(dayNoteCalories)} calories`
+    : "";
+  summary.textContent = `${day.entries.length} fast(s), ${day.totalHours.toFixed(1)} total hours${calorieSummary}`;
 
   day.entries.forEach(e => {
     const displayStart = e.displayStartTimestamp ?? e.startTimestamp;
@@ -3548,7 +3552,11 @@ function renderHistoryNotes() {
     return;
   }
 
-  summary.textContent = `${dayNotes.length} note(s)`;
+  const dayNoteCalories = getNoteCaloriesForDateKey(selectedDayKey);
+  const calorieSummary = Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
+    ? `, ${formatCalories(dayNoteCalories)} calories`
+    : "";
+  summary.textContent = `${dayNotes.length} note(s)${calorieSummary}`;
   dayNotes.forEach(note => list.appendChild(buildNoteCard(note)));
 }
 
