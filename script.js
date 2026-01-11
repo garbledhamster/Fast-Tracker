@@ -2691,6 +2691,7 @@ function initButtons() {
   $("edit-history-delete").addEventListener("click", deleteEditedHistoryEntry);
 
   $("new-note-btn").addEventListener("click", () => openNoteEditor());
+  $("calorie-log-meal-btn").addEventListener("click", () => openNoteEditor());
   const noteEditorBackdrop = document.querySelector("#note-editor-modal .note-editor-backdrop");
   if (noteEditorBackdrop) noteEditorBackdrop.addEventListener("click", closeNoteEditor);
   $("note-editor-close").addEventListener("click", closeNoteEditor);
